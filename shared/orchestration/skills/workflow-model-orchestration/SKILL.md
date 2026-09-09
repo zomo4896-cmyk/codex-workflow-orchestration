@@ -54,6 +54,7 @@ For substantial repository work, use stages rather than a generic pool of agents
 | Stage | Role | Default route | Owns |
 |---|---|---|---|
 | Map | explorer | routine / Luna | Relevant files, execution path, constraints, and existing tests. Read-only. |
+| Decide | architect | specialist / Astra | Compare short-listed architecture choices before a consequential implementation begins. Read-only. |
 | Build | worker | coder / Spark | One bounded implementation surface with explicit file ownership. |
 | Prove | tester | routine / Luna | Reproduction and the smallest meaningful validation. No production-code edits. |
 | Verify facts | researcher | routine / Luna | Version-specific or external facts from primary sources. Read-only. |
@@ -63,7 +64,11 @@ Use the actual available agent type that matches the route. Role names describe 
 
 Delegate when a task spans multiple modules, needs repository mapping, has independent workstreams, crosses a runtime boundary, or needs verified external facts. Keep a localized and well-understood change with the coordinator. Do not delegate merely to satisfy a process rule.
 
-For delegated implementation, use: **map → decide → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
+For delegated implementation, use: **map → Astra design gate when warranted → coordinator decides → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
+
+Run the Astra design gate before implementation when choices differ materially in module boundaries, data ownership, public APIs, permissions, schema or migration risk, concurrency, operational recovery, or long-term maintenance. Give Astra the mapped evidence and 2–3 feasible options, not an unbounded request to redesign the system. Require a concise decision record: recommendation, rejected alternatives, trade-offs, non-goals, and acceptance criteria. The coordinator accepts, narrows, or rejects that recommendation.
+
+Do not invoke Astra for an architecture gate when existing patterns and a localized change already determine the implementation. The gate is for making one costly decision well; it is not a mandatory planning ceremony.
 
 Use the reviewer only when a defect would be costly or difficult to detect through focused tests: security, data integrity, concurrency, permission changes, public API compatibility, or an unresolved design trade-off. Do not run an Astra review automatically for routine successful changes.
 
