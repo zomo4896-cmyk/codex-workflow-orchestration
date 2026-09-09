@@ -43,6 +43,8 @@ Automatic sync checks Git hourly and at login/user-service startup without consu
 
 Restart Codex to load new defaults. Existing sessions may retain their selected model/instructions. Explicit user/project settings and higher-priority instructions can override global defaults.
 
+The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the mapped coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
+
 ## Contents
 
 See [package details](shared/orchestration/README.md). The standalone skill source is under [skills](shared/orchestration/skills).
