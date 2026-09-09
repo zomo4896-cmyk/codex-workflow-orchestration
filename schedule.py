@@ -2,12 +2,31 @@
 import argparse
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 
 
 def systemd_quote(value):
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"').replace('%', '%%').replace('$', '$$') + '"'
+
+
+def install_cron(command, target, label):
+    """Install only this package's startup and hourly cron lines."""
+    marker = f"# codex-sync-{label}"
+    listed = subprocess.run(['crontab', '-l'], text=True, capture_output=True)
+    if listed.returncode not in (0, 1):
+        raise RuntimeError('could not read the current crontab')
+    existing = [line for line in listed.stdout.splitlines() if marker not in line]
+    log = target / 'model-routing' / 'sync.log'
+    log.parent.mkdir(parents=True, exist_ok=True)
+    run = shlex.join([str(value) for value in command])
+    redirect = shlex.quote(str(log))
+    existing.extend([
+        f'@reboot {run} >> {redirect} 2>&1 {marker} startup',
+        f'17 * * * * {run} >> {redirect} 2>&1 {marker} hourly',
+    ])
+    subprocess.run(['crontab', '-'], input='\n'.join(existing) + '\n', text=True, check=True)
 
 
 def main():
@@ -49,11 +68,22 @@ def main():
         unitdir.mkdir(parents=True, exist_ok=True)
         service = '[Unit]\nDescription=Sync shared Codex policy\n\n[Service]\nType=oneshot\nExecStart=' + ' '.join(map(systemd_quote, command)) + '\nEnvironment=GIT_TERMINAL_PROMPT=0\nTimeoutStartSec=600\n'
         timer = '[Unit]\nDescription=Hourly shared Codex update\n\n[Timer]\nOnStartupSec=5min\nOnCalendar=hourly\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n'
-        (unitdir / (unit_name + '.service')).write_text(service)
-        (unitdir / (unit_name + '.timer')).write_text(timer)
-        subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
-        subprocess.run(['systemctl', '--user', 'enable', '--now', unit_name + '.timer'], check=True)
-        print('Installed user timer: five minutes after user service startup and hourly.')
+        service_path = unitdir / (unit_name + '.service')
+        timer_path = unitdir / (unit_name + '.timer')
+        service_path.write_text(service)
+        timer_path.write_text(timer)
+        try:
+            subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
+            subprocess.run(['systemctl', '--user', 'enable', '--now', unit_name + '.timer'], check=True)
+            print('Installed user timer: five minutes after user service startup and hourly.')
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            service_path.unlink(missing_ok=True)
+            timer_path.unlink(missing_ok=True)
+            try:
+                install_cron(command, target, label)
+            except (FileNotFoundError, RuntimeError, subprocess.CalledProcessError) as exc:
+                parser.error(f'no user systemd bus and cron fallback failed: {exc}')
+            print('Installed crontab update: at boot and hourly.')
     else:
         parser.error('Supported platforms: Windows or Linux with systemd user services.')
 

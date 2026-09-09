@@ -29,7 +29,7 @@ python sync.py --adopt
 python schedule.py
 ```
 
-Linux (systemd user services for scheduled updates):
+Linux:
 
 ```sh
 python3 sync.py --check --adopt
@@ -39,7 +39,7 @@ python3 schedule.py
 
 This repository installs and syncs only its own package. The initial `--adopt` allows replacing existing package-owned settings after preview, with backups; it does not bypass later local-edit conflicts. Use `--codex-home PATH` on both scripts if needed; otherwise CODEX_HOME or ~/.codex is used.
 
-Automatic sync checks Git hourly and at login/user-service startup without consuming model quota. Windows task: `CodexSync-orchestration`. Linux timer: `codex-sync-orchestration.timer`. Keep this checkout at its installed path. The Linux user service manager must be active. Public updates are read-only and need no GitHub credentials. A private fork requires its own non-interactive Git authentication.
+Automatic sync checks Git hourly and at login/user-service startup without consuming model quota. Windows uses `CodexSync-orchestration`. Linux uses `codex-sync-orchestration.timer` when a user systemd bus is available; otherwise the installer creates only its own crontab entries for boot and hourly updates. Keep this checkout at its installed path. Public updates are read-only and need no GitHub credentials. A private fork requires its own non-interactive Git authentication.
 
 Restart Codex to load new defaults. Existing sessions may retain their selected model/instructions. Explicit user/project settings and higher-priority instructions can override global defaults.
 
@@ -58,9 +58,9 @@ python sync.py --update
 python -m unittest test_sync test_schedule
 ```
 
-Use `python3` on Linux. Tests specific to another package are skipped in this standalone distribution. Local managed edits, an AGENTS.override.md file, or failed Git authentication stop sync rather than overwriting changes. Inspect Windows Task Scheduler's last result or `journalctl --user -u codex-sync-orchestration.service`. Desktop notifications for sync failures are not implemented. Backups and sync state remain local under model-routing; do not remove state to bypass conflicts.
+Use `python3` on Linux. Tests specific to another package are skipped in this standalone distribution. Local managed edits, an AGENTS.override.md file, or failed Git authentication stop sync rather than overwriting changes. Inspect Windows Task Scheduler, `journalctl --user -u codex-sync-orchestration.service`, or the local `model-routing/sync.log` for cron fallback output. Desktop notifications for sync failures are not implemented. Backups and sync state remain local under model-routing; do not remove state to bypass conflicts.
 
-To stop updates: `Unregister-ScheduledTask -TaskName CodexSync-orchestration -Confirm:$false` on Windows, or `systemctl --user disable --now codex-sync-orchestration.timer` on Linux. Installed files remain; use local backups to revert if needed.
+To stop updates: `Unregister-ScheduledTask -TaskName CodexSync-orchestration -Confirm:$false` on Windows; on Linux, disable the systemd timer or remove the two `# codex-sync-orchestration` crontab lines. Installed files remain; use local backups to revert if needed.
 
 ## Model discovery leader
 

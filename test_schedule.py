@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -29,6 +30,26 @@ class ScheduleTests(unittest.TestCase):
                 self.assertIn('--codex-home', unit.read_text())
                 self.assertIn('--update', unit.read_text())
                 self.assertEqual(calls[-1][:4], ['systemctl', '--user', 'enable', '--now'])
+
+    def test_cron_replaces_only_its_own_lines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / 'codex'
+            captured = {}
+
+            def run(args, **kwargs):
+                if args == ['crontab', '-l']:
+                    return subprocess.CompletedProcess(args, 0, '0 * * * * keep-me\n17 * * * * old # codex-sync-orchestration hourly\n', '')
+                if args == ['crontab', '-']:
+                    captured['text'] = kwargs['input']
+                    return subprocess.CompletedProcess(args, 0, '', '')
+                raise AssertionError(args)
+
+            with patch('schedule.subprocess.run', side_effect=run):
+                schedule.install_cron(['/usr/bin/python3', '/tmp/sync.py', '--update'], target, 'orchestration')
+            self.assertIn('0 * * * * keep-me', captured['text'])
+            self.assertNotIn('old # codex-sync-orchestration hourly', captured['text'])
+            self.assertIn('@reboot /usr/bin/python3 /tmp/sync.py --update', captured['text'])
+            self.assertIn('17 * * * * /usr/bin/python3 /tmp/sync.py --update', captured['text'])
 
 
 if __name__ == '__main__':
