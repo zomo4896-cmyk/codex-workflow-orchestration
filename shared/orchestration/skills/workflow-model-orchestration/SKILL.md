@@ -47,3 +47,29 @@ Identify the actual workflow and its dependencies before assigning models. These
 
 The ADHD skill is optional and controls communication/creative focus only; this skill works without it. Do not impose a creative ideation process on coding, or model routing on an ADHD-only installation. Required specialist skill prerequisites and tool availability still apply.
 
+## Staged delegation
+
+For substantial repository work, use stages rather than a generic pool of agents:
+
+| Stage | Role | Default route | Owns |
+|---|---|---|---|
+| Map | explorer | routine / Luna | Relevant files, execution path, constraints, and existing tests. Read-only. |
+| Build | worker | coder / Spark | One bounded implementation surface with explicit file ownership. |
+| Prove | tester | routine / Luna | Reproduction and the smallest meaningful validation. No production-code edits. |
+| Verify facts | researcher | routine / Luna | Version-specific or external facts from primary sources. Read-only. |
+| Review | reviewer | specialist / Astra | Material correctness, security, integrity, concurrency, or compatibility risk. Read-only. |
+
+Use the actual available agent type that matches the route. Role names describe the contract; they do not require an agent if the task is too small to benefit from one.
+
+Delegate when a task spans multiple modules, needs repository mapping, has independent workstreams, crosses a runtime boundary, or needs verified external facts. Keep a localized and well-understood change with the coordinator. Do not delegate merely to satisfy a process rule.
+
+For delegated implementation, use: **map → decide → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
+
+Use the reviewer only when a defect would be costly or difficult to detect through focused tests: security, data integrity, concurrency, permission changes, public API compatibility, or an unresolved design trade-off. Do not run an Astra review automatically for routine successful changes.
+
+Give every agent one bounded contract: objective, scope, constraints, deliverable, and acceptance check. Explorers, researchers, testers, and reviewers return evidence instead of changing production files. Workers stop and return control when a task requires a wider architecture, schema, dependency, or security decision.
+
+## Measure routed work
+
+For meaningful delegated work, prefer Codex's local rollout records when available to compare thread models, response counts, cached input, and reasoning output. Use those records with the compact outcomes log before changing assignments. Treat one short run, account-wide quota changes, and anecdotal screenshots as insufficient evidence for a permanent routing change.
+
