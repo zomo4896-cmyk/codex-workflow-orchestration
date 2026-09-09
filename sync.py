@@ -95,6 +95,29 @@ def in_multiline(lines: list[str], upto: int) -> bool:
     return quote is not None
 
 
+def table_at(data: dict, section: str):
+    current = data
+    for part in section.split("."):
+        if not isinstance(current, dict): return None
+        current = current.get(part)
+    return current
+
+
+def remove_owned(data: dict, section: str, keys: dict[str, object]) -> None:
+    if not section:
+        for key in keys: data.pop(key, None)
+        return
+    parents = []
+    current = data
+    for part in section.split("."):
+        if not isinstance(current, dict) or part not in current: return
+        parents.append((current, part)); current = current[part]
+    if not isinstance(current, dict): return
+    for key in keys: current.pop(key, None)
+    for parent, part in reversed(parents):
+        if parent.get(part) == {}: parent.pop(part)
+
+
 def set_toml(text: str, wanted: dict[str, dict[str, object]]) -> str:
     """Edit simple assignments only; reject multiline target values before any write."""
     parsed = tomllib.loads(text) if text.strip() else {}
@@ -102,7 +125,7 @@ def set_toml(text: str, wanted: dict[str, dict[str, object]]) -> str:
         raise SyncError("unsupported config.toml shape")
     lines = text.splitlines(keepends=True)
     for section, values in wanted.items():
-        actual = parsed if section == "" else parsed.get(section, {})
+        actual = parsed if section == "" else table_at(parsed, section)
         if actual and not isinstance(actual, dict): raise SyncError(f"unsupported [{section}] shape")
         positions = {}
         here = ""
@@ -142,14 +165,10 @@ def set_toml(text: str, wanted: dict[str, dict[str, object]]) -> str:
     final = tomllib.loads(result)
     before_other, after_other = copy.deepcopy(parsed), copy.deepcopy(final)
     for section, values in wanted.items():
-        for data in (before_other, after_other):
-            obj = data if section == "" else data.get(section, {})
-            if isinstance(obj, dict):
-                for key in values: obj.pop(key, None)
-        if section and section not in parsed: after_other.pop(section, None)
+        for data in (before_other, after_other): remove_owned(data, section, values)
     if before_other != after_other: raise SyncError("TOML edit would alter unrelated values")
     for section, values in wanted.items():
-        actual = final if section == "" else final.get(section)
+        actual = final if section == "" else table_at(final, section)
         if not isinstance(actual, dict) or any(actual.get(k) != v for k, v in values.items()):
             raise SyncError("TOML edit did not produce the requested owned values")
     return result
@@ -157,7 +176,9 @@ def set_toml(text: str, wanted: dict[str, dict[str, object]]) -> str:
 
 def owned_values(mapping: dict) -> dict[str, dict[str, object]]:
     coord, routine = mapping["coordinator"], mapping["routine"]
-    return {"": {"model": coord["model"], "model_reasoning_effort": coord["reasoning"]}, "agents": {
+    return {"": {"model": coord["model"], "model_reasoning_effort": coord["reasoning"]}, "models.new_thread": {
+        "model": coord["model"], "model_reasoning_effort": coord["reasoning"],
+    }, "agents": {
         "enabled": True, "max_concurrent_threads_per_session": 2,
         "default_subagent_model": routine["model"], "default_subagent_reasoning_effort": routine["reasoning"],
     }}
@@ -167,7 +188,7 @@ def load_state(path: Path) -> dict: return json.loads(path.read_text()) if path.
 def config_values(text: str, wanted: dict) -> dict:
     data = tomllib.loads(text) if text.strip() else {}; got = {}
     for section, keys in wanted.items():
-        obj = data if not section else data.get(section, {})
+        obj = data if not section else table_at(data, section)
         got[section] = {k: obj.get(k) if isinstance(obj, dict) else None for k in keys}
     return got
 
@@ -252,7 +273,12 @@ def plan(args: argparse.Namespace) -> tuple[Path, dict[Path, bytes], dict]:
         no_symlink(home, config)
         prior = state.get("config_values")
         current = config_values(old_config, wanted)
-        if prior and current != prior: raise SyncError("local managed config.toml edits detected")
+        if prior and any(
+            current.get(section, {}).get(key) != value
+            for section, values in prior.items()
+            for key, value in values.items()
+        ):
+            raise SyncError("local managed config.toml edits detected")
         if not prior and any(v is not None for section in current.values() for v in section.values()) and not args.adopt:
             raise SyncError("existing managed config.toml fields require --adopt")
         new_config = set_toml(old_config, wanted).encode()

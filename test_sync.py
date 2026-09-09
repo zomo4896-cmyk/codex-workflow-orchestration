@@ -31,6 +31,9 @@ class SyncTests(unittest.TestCase):
             config = (self.home / "config.toml").read_text()
             model = json.loads((self.source / "orchestration/models.json").read_text())["coordinator"]["model"]
             self.assertIn(f'model = "{model}"', config)
+            parsed = __import__("tomllib").loads(config)
+            self.assertEqual(parsed["models"]["new_thread"]["model"], model)
+            self.assertEqual(parsed["models"]["new_thread"]["model_reasoning_effort"], "low")
         if (self.source / "adhd").is_dir(): self.assertTrue((self.home / "skills/adhd-creative-flow/SKILL.md").exists())
         self.assertTrue((self.home / "model-routing/sync-state.json").exists())
 
