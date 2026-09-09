@@ -8,7 +8,7 @@ Workflow-based task decomposition, model allocation, bounded agents, and evidenc
 Install and enable workflow-aware model orchestration globally on this workstation from https://github.com/zomo4896-cmyk/codex-workflow-orchestration. Follow its AGENTS.md, verify model availability, preserve my existing credentials and machine-specific settings, and enable its automatic Git updates. Install only model orchestration, not ADHD skills. Validate the installation and explain any session-restart requirement.
 ```
 
-The user runs this prompt in Codex on each workstation. A bare link or GitHub page cannot remotely execute an installation. Windows and Linux are supported; the assistant needs local file/tool access.
+The user runs this prompt in Codex on each workstation. Initial adoption installs the updater automatically. A bare link or GitHub page cannot remotely execute an installation. Windows and Linux are supported; the assistant needs local file/tool access. Share [INSTALL_PROMPT.md](INSTALL_PROMPT.md) when you want a friend to install it.
 
 For model discovery and personal usage review, use [the Linux/CLI-ready review prompt](REVIEW_PROMPT.md). Automatic Git sync consumes no LLM quota; a model review does. Only designate one recurring review leader.
 
@@ -26,7 +26,6 @@ Windows PowerShell:
 ```powershell
 python sync.py --check --adopt
 python sync.py --adopt
-python schedule.py
 ```
 
 Linux:
@@ -34,16 +33,17 @@ Linux:
 ```sh
 python3 sync.py --check --adopt
 python3 sync.py --adopt
-python3 schedule.py
 ```
 
-This repository installs and syncs only its own package. The initial `--adopt` allows replacing existing package-owned settings after preview, with backups; it does not bypass later local-edit conflicts. Use `--codex-home PATH` on both scripts if needed; otherwise CODEX_HOME or ~/.codex is used.
+This repository installs and syncs only its own package. The initial `--adopt` allows replacing existing package-owned settings after preview, with backups; it installs the automatic updater unless `--no-schedule` is supplied. It does not bypass later local-edit conflicts. Use `--codex-home PATH` on both scripts if needed; otherwise CODEX_HOME or ~/.codex is used.
 
 Automatic sync checks Git hourly and at login/user-service startup without consuming model quota. Windows uses `CodexSync-orchestration`. Linux uses `codex-sync-orchestration.timer` when a user systemd bus is available; otherwise the installer creates only its own crontab entries for boot and hourly updates. Keep this checkout at its installed path. Public updates are read-only and need no GitHub credentials. A private fork requires its own non-interactive Git authentication.
 
 Restart Codex to load new defaults. Existing sessions may retain their selected model/instructions. Explicit user/project settings and higher-priority instructions can override global defaults.
 
-The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the mapped coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
+The installer reads the authenticated local Codex model catalog before applying orchestration. Spark is used for the coder only when available; otherwise it falls back to Luna, then Terra. Astra is used for the architecture/review specialist only when available; otherwise it falls back to Terra, then Luna. The installed `model-routing/models.json` records each workstation's resolved mapping, so a plan upgrade or downgrade takes effect on its next sync.
+
+The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the resolved coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
 
 ## Contents
 

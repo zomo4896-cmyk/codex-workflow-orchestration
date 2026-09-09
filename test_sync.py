@@ -21,7 +21,7 @@ class SyncTests(unittest.TestCase):
     def args(self, *extra):
         import argparse
         components = [extra[i + 1] for i, value in enumerate(extra[:-1]) if value == "--component"]
-        return argparse.Namespace(codex_home=str(self.home), check=False, update=False, adopt="--adopt" in extra, component=components)
+        return argparse.Namespace(codex_home=str(self.home), check=False, update=False, adopt="--adopt" in extra, component=components, no_schedule=True)
     def sync_home(self, *extra): return sync.apply(self.args(*extra))
 
     def test_fresh_and_idempotent(self):
@@ -64,11 +64,52 @@ class SyncTests(unittest.TestCase):
         self.require("orchestration")
         self.sync_home()
         source = sync.SHARED / "orchestration/models.json"; original = source.read_text(); data = json.loads(original)
+        original_catalog = sync.model_catalog
         try:
-            data["coder"]["model"] = "test-model"; source.write_text(json.dumps(data))
+            data["coder"]["model"] = "gpt-5.6-terra"; source.write_text(json.dumps(data))
+            sync.model_catalog = lambda: {'gpt-5.6-terra'}
             self.sync_home()
-            self.assertIn('model = "test-model"', (self.home / "agents/quota_coder.toml").read_text())
-        finally: source.write_text(original)
+            self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_coder.toml").read_text())
+        finally:
+            source.write_text(original)
+            sync.model_catalog = original_catalog
+
+    def test_missing_spark_and_astra_use_available_fallbacks(self):
+        self.require("orchestration")
+        original_catalog = sync.model_catalog
+        sync.model_catalog = lambda: {'gpt-5.6-terra', 'gpt-5.6-luna'}
+        try:
+            self.sync_home()
+        finally:
+            sync.model_catalog = original_catalog
+        mapping = json.loads((self.home / "model-routing/models.json").read_text())
+        self.assertEqual(mapping['coder']['model'], 'gpt-5.6-luna')
+        self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-terra')
+        self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_coder.toml").read_text())
+        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_specialist.toml").read_text())
+
+    def test_schedule_failure_is_reported(self):
+        original_catalog, original_schedule = sync.model_catalog, sync.install_schedule
+        sync.model_catalog = lambda: None
+        sync.install_schedule = lambda home: (_ for _ in ()).throw(sync.SyncError('scheduler unavailable'))
+        try:
+            args = self.args('--adopt'); args.no_schedule = False
+            with self.assertRaisesRegex(sync.SyncError, 'scheduler unavailable'):
+                sync.run(args)
+        finally:
+            sync.model_catalog, sync.install_schedule = original_catalog, original_schedule
+
+    def test_adopt_installs_schedule(self):
+        original_catalog, original_schedule = sync.model_catalog, sync.install_schedule
+        scheduled = []
+        sync.model_catalog = lambda: None
+        sync.install_schedule = lambda home: scheduled.append(home)
+        try:
+            args = self.args('--adopt'); args.no_schedule = False
+            self.assertEqual(sync.run(args), 0)
+        finally:
+            sync.model_catalog, sync.install_schedule = original_catalog, original_schedule
+        self.assertEqual(scheduled, [self.home])
 
     def test_later_managed_edit_conflicts_without_partial_write(self):
         self.require("orchestration")

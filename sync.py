@@ -44,6 +44,14 @@ COMPONENT = {
 class SyncError(RuntimeError): pass
 
 
+ROLE_CANDIDATES = {
+    'coordinator': [('gpt-5.6-terra', 'low'), ('gpt-5.6-luna', 'medium')],
+    'routine': [('gpt-5.6-luna', 'low'), ('gpt-5.6-terra', 'low')],
+    'coder': [('gpt-5.3-codex-spark', 'medium'), ('gpt-5.6-luna', 'medium'), ('gpt-5.6-terra', 'medium')],
+    'specialist': [('gpt-6-astra', 'medium'), ('gpt-5.6-terra', 'high'), ('gpt-5.6-luna', 'high')],
+}
+
+
 def digest(data: bytes) -> str: return hashlib.sha256(data).hexdigest()
 def read(path: Path) -> bytes: return path.read_bytes() if path.exists() else b""
 def atomic(path: Path, data: bytes) -> None:
@@ -51,6 +59,30 @@ def atomic(path: Path, data: bytes) -> None:
     with tempfile.NamedTemporaryFile(dir=path.parent, delete=False) as out:
         out.write(data); temp = Path(out.name)
     os.replace(temp, path)
+
+
+def model_catalog() -> set[str] | None:
+    """Read only the authenticated local Codex catalog; unavailable is not an error."""
+    try:
+        result = subprocess.run(['codex', 'debug', 'models'], text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=20, check=True)
+        catalog = json.loads(result.stdout or '')
+    except (OSError, TypeError, subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError):
+        return None
+    models = catalog.get('models', []) if isinstance(catalog, dict) else catalog
+    if not isinstance(models, list): return None
+    return {entry.get('slug') or entry.get('model') for entry in models if isinstance(entry, dict) and isinstance(entry.get('slug') or entry.get('model'), str)}
+
+
+def resolve_mapping(mapping: dict) -> dict:
+    """Keep the published preference order, selecting only models this host exposes."""
+    available = model_catalog()
+    if not available: return copy.deepcopy(mapping)
+    resolved = copy.deepcopy(mapping)
+    for role, candidates in ROLE_CANDIDATES.items():
+        selected = next((candidate for candidate in candidates if candidate[0] in available), None)
+        if selected:
+            resolved[role]['model'], resolved[role]['reasoning'] = selected
+    return resolved
 
 def no_symlink(root: Path, path: Path) -> None:
     """Managed paths are deliberately boring files, never redirected links."""
@@ -261,7 +293,7 @@ def plan(args: argparse.Namespace) -> tuple[Path, dict[Path, bytes], dict]:
     changes: dict[Path, bytes] = {}
     wanted = None
     if "orchestration" in selected:
-        mapping = json.loads((SHARED / "orchestration" / "models.json").read_text())
+        mapping = resolve_mapping(json.loads((SHARED / "orchestration" / "models.json").read_text()))
         if not all(k in mapping for k in ("coordinator", "routine", "coder", "specialist")): raise SyncError("invalid models.json")
         for role in ("coordinator", "routine", "coder", "specialist"):
             entry = mapping[role]
@@ -304,6 +336,8 @@ def plan(args: argparse.Namespace) -> tuple[Path, dict[Path, bytes], dict]:
         src = SHARED / owner / rel
         no_symlink(home, dest)
         old, new = read(dest), read(src)
+        if rel == 'models.json':
+            new = (json.dumps(mapping, indent=2) + '\n').encode()
         if rel.startswith("agents/quota_"):
             role = rel.removeprefix("agents/quota_").removesuffix(".toml")
             new = set_toml(new.decode(), {"": {"model": mapping[role]["model"], "model_reasoning_effort": mapping[role]["reasoning"]}}).encode()
@@ -374,15 +408,33 @@ def apply_locked(args: argparse.Namespace) -> int:
     return 0
 
 
+def install_schedule(home: Path) -> None:
+    scheduler = ROOT / 'schedule.py'
+    if not scheduler.is_file(): return
+    result = subprocess.run([sys.executable, str(scheduler), '--codex-home', str(home)], check=False)
+    if result.returncode:
+        raise SyncError('configuration installed, but automatic update scheduling failed')
+
+
+def run(args: argparse.Namespace) -> int:
+    result = apply(args)
+    if args.adopt and not args.check and not args.no_schedule:
+        home = Path(args.codex_home or os.environ.get("CODEX_HOME") or Path.home() / ".codex").expanduser()
+        install_schedule(home)
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--codex-home")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--adopt", action="store_true")
+    parser.add_argument("--no-schedule", action="store_true", help="Do not install the automatic updater during initial adoption.")
     parser.add_argument("--component", choices=(*COMPONENTS, "all"), action="append")
     args = parser.parse_args()
-    try: return apply(args)
+    try:
+        return run(args)
     except (SyncError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
         print(f"sync failed: {exc}", file=sys.stderr); return 2
 
