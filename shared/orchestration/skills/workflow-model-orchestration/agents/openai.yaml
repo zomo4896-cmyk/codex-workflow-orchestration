@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workflow Model Orchestration"
+  short_description: "Assign models to tasks within each workflow"
+  default_prompt: "Use $workflow-model-orchestration to plan and complete this workflow with suitable models."

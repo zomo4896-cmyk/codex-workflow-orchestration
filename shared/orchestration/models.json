@@ -1,0 +1,21 @@
+{
+  "coordinator": {
+    "model": "gpt-5.6-terra",
+    "reasoning": "low"
+  },
+  "routine": {
+    "model": "gpt-5.6-luna",
+    "reasoning": "low",
+    "agent": "quota_routine"
+  },
+  "coder": {
+    "model": "gpt-5.3-codex-spark",
+    "reasoning": "medium",
+    "agent": "quota_coder"
+  },
+  "specialist": {
+    "model": "gpt-6-astra",
+    "reasoning": "medium",
+    "agent": "quota_specialist"
+  }
+}
