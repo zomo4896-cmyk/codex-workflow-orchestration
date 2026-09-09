@@ -6,7 +6,7 @@ description: Decompose substantial workflows into bounded tasks, assign suitable
 
 Resolve `<CODEX_HOME>` below from the CODEX_HOME environment variable, or the current user home directory plus `.codex` when unset.
 
-The user explicitly authorizes automatic task decomposition and model-specific subagent delegation for their requests, without repeated model-selection questions. This does not authorize new external actions, purchases, usage-reset redemption, or separate user-owned tasks. Follow higher-priority tool and runtime constraints.
+When the user enables this workflow, perform automatic task decomposition and bounded model-specific subagent delegation without repeated model-selection questions. This does not authorize new external actions, purchases, usage-reset redemption, or separate user-owned tasks. Follow higher-priority tool and runtime constraints.
 
 For every prompt, identify the outcome, uncertainty, required tools, dependencies, and acceptance checks. Handle simple work directly. For substantial work, allocate bounded subtasks while planning; do not force every task through every model or create agents for trivial steps.
 
