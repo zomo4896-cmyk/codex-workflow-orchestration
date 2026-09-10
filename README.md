@@ -57,7 +57,8 @@ The installer preserves unrelated config, instruction blocks, and files. Credent
 
 ```sh
 python sync.py --update
-python -m unittest test_sync test_schedule
+python -m unittest test_sync test_schedule test_model_usage
+python scripts/model_usage.py --latest 100
 ```
 
 Use `python3` on Linux. Tests specific to another package are skipped in this standalone distribution. Local managed edits, an AGENTS.override.md file, or failed Git authentication stop sync rather than overwriting changes. Inspect Windows Task Scheduler, `journalctl --user -u codex-sync-orchestration.service`, or the local `model-routing/sync.log` for cron fallback output. Desktop notifications for sync failures are not implemented. Backups and sync state remain local under model-routing; do not remove state to bypass conflicts.
@@ -69,6 +70,8 @@ To stop updates: `Unregister-ScheduledTask -TaskName CodexSync-orchestration -Co
 Only the designated workstation runs the weekly Codex discovery automation. Maintain shared/orchestration/models.json, validate candidates and policy changes, run tests and sync locally, then commit only explicit generic orchestration source changes to an explicitly authorized repository. Followers only run Git sync. Never publish raw prompts, code, personal usage records, credentials, or backups.
 
 The local compact outcomes log informs the leader's review of verified completion, rework, and escalation. Collection is instruction-driven, not guaranteed telemetry, and the leader does not automatically see other workstation logs. This supports evidence-based adaptation, not a guarantee of continuous optimality or exact quota attribution. Account quota is shared across workstations using the same account.
+
+`scripts/model_usage.py` is a read-only local summary of recent rollout records by active model. Use it as evidence in the weekly review; it does not report plan quota precisely and never uploads session content.
 
 ## Public sharing and personal customization
 

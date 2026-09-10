@@ -7,7 +7,7 @@ Perform one Codex model discovery and personal usage review on this workstation 
 
 Resolve CODEX_HOME or ~/.codex. Locate the installed orchestration checkout from model-routing/sync-state.json (source_checkouts.orchestration, or source_checkout). If it is not installed, install only the orchestration package first, following the repository's AGENTS.md. Preserve existing credentials, MCP settings, permissions, projects, and unrelated instructions.
 
-Follow the installed model-routing/REVIEW.md. Review the last 30 days of compact local outcomes, capped at 100 records, and the prior local review. Compare verified completion, rework, escalation causes, task decomposition overhead, and model/tool compatibility. Treat missing records as insufficient evidence. Do not upload prompts, source code, paths, usage records, credentials, or personal data.
+Follow the installed model-routing/REVIEW.md. Run the installed `scripts/model_usage.py --latest 100`, then review the last 30 days of compact local outcomes, capped at 100 records, and the prior local review. Compare verified completion, rework, escalation causes, task decomposition overhead, and model/tool compatibility. Treat missing records as insufficient evidence. Do not upload prompts, source code, paths, usage records, credentials, or personal data.
 
 Check current official OpenAI documentation and models actually available to my Codex account/runtime. Check remaining allowance using a supported mechanism if available. Do not invent quota measurements or use API prices as proof of plan savings. If allowance cannot be verified or is below 10%, skip candidate benchmarks and perform discovery and evidence review only.
 
