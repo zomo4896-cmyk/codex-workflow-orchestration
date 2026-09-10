@@ -12,6 +12,10 @@ For every prompt, identify the outcome, uncertainty, required tools, dependencie
 
 Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reasoning assignments. This is the canonical mapping; config.toml and agent TOML model fields are synchronized runtime copies. Do not infer model assignments from old conversation messages.
 
+## New-model promotion policy
+
+During an authorized model-discovery review, read `<CODEX_HOME>/model-routing/REVIEW.md` and apply its one-tier promotion procedure. A newly introduced, verified Codex model is the trigger to move each eligible role to the next more capable model tier while preserving its exact reasoning level. The current user-defined ladder is Luna → Sol → Astra; extend it only with verified capability evidence. Roles at the highest available tier stay there until a higher eligible tier exists. Use a release record to prevent repeated promotion from the same introduction. This is a discovery-review policy, not a per-prompt catalog check or an automatic action performed by Git sync. Existing model names below describe the starting topology; the current mapping takes precedence after promotion.
+
 - Coordinator: Astra orchestrator owns scope, planning, integration, communication, and verification. Explicit user model choices prevail. Changing saved defaults does not change the running model.
 - Routine role: Luna explorer or researcher for bounded investigation, inventories, evidence, and focused lookup.
 - Planner role: lead consequential discovery, option comparison, workload allocation, and the executable plan; use the strongest eligible planning route only when the decision warrants it.
@@ -90,4 +94,3 @@ Give every agent one bounded contract: objective, scope, constraints, deliverabl
 ## Measure routed work
 
 For meaningful delegated work, prefer Codex's local rollout records when available to compare thread models, response counts, cached input, and reasoning output. Use those records with the compact outcomes log before changing assignments. Treat one short run, account-wide quota changes, and anecdotal screenshots as insufficient evidence for a permanent routing change.
-

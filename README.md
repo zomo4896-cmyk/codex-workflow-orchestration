@@ -88,6 +88,8 @@ To stop updates: `Unregister-ScheduledTask -TaskName CodexSync-orchestration -Co
 
 ## Model discovery leader
 
+New-model policy: during an authorized discovery review, each verified new general-purpose Codex model introduction targets **one higher model tier per eligible role**, preserving reasoning effort exactly. The starting ladder is Luna → Sol → Astra. Top-tier roles wait for a verified higher compatible model; unavailable or incompatible targets stay pending. The review records each release and role so repeated checks cannot promote it again. See [the promotion procedure](shared/orchestration/REVIEW.md#one-tier-promotion-on-a-new-model-introduction). Existing models establish the first baseline without an immediate promotion. This is instruction-driven review behavior: hourly Git updates distribute published mappings but do not detect releases or run model reviews.
+
 Only the designated workstation runs the weekly Codex discovery automation. Maintain shared/orchestration/models.json, validate candidates and policy changes, run tests and sync locally, then commit only explicit generic orchestration source changes to an explicitly authorized repository. Followers only run Git sync. Never publish raw prompts, code, personal usage records, credentials, or backups.
 
 The local compact outcomes log informs the leader's review of verified completion, rework, and escalation. Collection is instruction-driven, not guaranteed telemetry, and the leader does not automatically see other workstation logs. This supports evidence-based adaptation, not a guarantee of continuous optimality or exact quota attribution. Account quota is shared across workstations using the same account.

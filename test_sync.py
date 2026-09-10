@@ -74,6 +74,30 @@ class SyncTests(unittest.TestCase):
             source.write_text(original)
             sync.model_catalog = original_catalog
 
+    def test_published_promotion_survives_sync_and_preserves_reasoning(self):
+        self.require("orchestration")
+        from unittest.mock import patch
+        source = sync.SHARED / "orchestration/models.json"
+        data = json.loads(source.read_text())
+        data["routine"]["model"] = "gpt-5.6-sol"
+        data["coder"]["model"] = "gpt-6-astra"
+        # Synthetic catalog entry represents a future reviewed model, not a real release.
+        data["coordinator"]["model"] = "test-future-model"
+        source.write_text(json.dumps(data))
+        with patch.object(sync, "model_catalog", return_value={
+            "gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra", "test-future-model"
+        }):
+            self.sync_home()
+            self.sync_home()
+        installed = json.loads((self.home / "model-routing/models.json").read_text())
+        self.assertEqual(installed, data)
+        tomllib = __import__("tomllib")
+        routine = tomllib.loads((self.home / "agents/quota_routine.toml").read_text())
+        self.assertEqual(routine["model"], "gpt-5.6-sol")
+        self.assertEqual(routine["model_reasoning_effort"], data["routine"]["reasoning"])
+        config = tomllib.loads((self.home / "config.toml").read_text())
+        self.assertEqual(config["models"]["new_thread"]["model"], "test-future-model")
+
     def test_missing_spark_and_astra_use_available_fallbacks(self):
         self.require("orchestration")
         original_catalog = sync.model_catalog

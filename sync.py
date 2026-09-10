@@ -80,6 +80,9 @@ def resolve_mapping(mapping: dict) -> dict:
     if not available: return copy.deepcopy(mapping)
     resolved = copy.deepcopy(mapping)
     for role, candidates in ROLE_CANDIDATES.items():
+        # The reviewed source mapping owns promotions and their reasoning levels.
+        if resolved[role]['model'] in available:
+            continue
         selected = next((candidate for candidate in candidates if candidate[0] in available), None)
         if selected:
             resolved[role]['model'], resolved[role]['reasoning'] = selected
