@@ -12,11 +12,11 @@ For every prompt, identify the outcome, uncertainty, required tools, dependencie
 
 Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reasoning assignments. This is the canonical mapping; config.toml and agent TOML model fields are synchronized runtime copies. Do not infer model assignments from old conversation messages.
 
-- Coordinator: own scope, integration, communication, and verification. Explicit user model choices prevail. Changing saved defaults does not change the running model.
-- Routine role: narrow independent extraction, inventories, and repeatable work.
+- Coordinator: Astra orchestrator owns scope, planning, integration, communication, and verification. Explicit user model choices prevail. Changing saved defaults does not change the running model.
+- Routine role: Luna explorer or researcher for bounded investigation, inventories, evidence, and focused lookup.
 - Planner role: lead consequential discovery, option comparison, workload allocation, and the executable plan; use the strongest eligible planning route only when the decision warrants it.
 - Coder role: bounded code implementation or exploration, only when its model and required tools/modalities are available; otherwise use the routine role for narrow work or coordinator for broader work.
-- Specialist role: a consequential ambiguous decision or evidenced blocker. Pass the specific question and evidence; do not routinely review successful work with this role.
+- Specialist role: Astra xhigh independent review only for a material risk after implementation and focused tests.
 
 Use named roles when supported; otherwise explicitly set the available spawn tool's model and compatible reasoning effort. Use a minimal-context fork or no history with a self-contained brief, rather than copying the full conversation. Never silently fall back to an expensive model; report an unavailable route briefly and continue with the coordinator when feasible.
 
@@ -56,15 +56,14 @@ For substantial repository work, use stages rather than a generic pool of agents
 | Stage | Role | Default route | Owns |
 |---|---|---|---|
 | Frame | coordinator | coordinator | The decision question, constraints, success criteria, and what is out of scope. |
-| Map | explorer | routine / Luna | Relevant files, execution path, constraints, and existing tests. Read-only. |
-| Explore | researcher | routine / Luna | Evidence, precedents, and up to three materially different feasible approaches. Read-only. |
+| Map | explorer | routine / Luna max | Relevant files, execution path, constraints, and existing tests. Read-only. |
+| Explore | researcher | routine / Luna max | Evidence, precedents, and up to three materially different feasible approaches. Read-only. |
 | Evaluate | planning lead | planner / Astra | Trade-offs, assumptions, workload allocation, and a recommended direction. Read-only. |
 | Decide | architect | specialist / Astra | Compare short-listed architecture choices before a consequential implementation begins. Read-only. |
 | Plan | planning lead | planner / Astra | Ordered work, dependencies, ownership, suitable role assignments, and acceptance checks. Read-only. |
-| Build | worker | coder / Spark | One bounded implementation surface with explicit file ownership. |
-| Prove | tester | routine / Luna | Reproduction and the smallest meaningful validation. No production-code edits. |
-| Verify facts | researcher | routine / Luna | Version-specific or external facts from primary sources. Read-only. |
-| Review | reviewer | specialist / Astra | Material correctness, security, integrity, concurrency, or compatibility risk. Read-only. |
+| Build and test | worker | coder / Sol high | One bounded implementation surface and its focused tests. |
+| Verify facts | researcher | routine / Luna max | Version-specific or external facts from primary sources. Read-only. |
+| Review | reviewer | specialist / Astra xhigh | Independent material correctness, security, integrity, concurrency, or compatibility review. Read-only. |
 
 Use the actual available agent type that matches the route. Role names describe the contract; they do not require an agent if the task is too small to benefit from one.
 
@@ -78,7 +77,7 @@ Frame the decision in one sentence, identify constraints and success criteria, t
 
 Use the planner for consequential discovery and planning after alternatives and evidence are short-listed. It assigns workload by task shape: routine for bounded evidence or proof, coder for settled isolated implementation, coordinator for integration and dependent work, and specialist only for a material unresolved decision. For a small or well-understood task, the coordinator plans directly. Astra is a decision synthesizer and planning lead when eligible, not the default brainstormer; routine evidence scans keep ordinary ideation fast and quota-aware.
 
-For delegated implementation after a direction is chosen, use: **map → Astra design gate when warranted → coordinator decides → plan → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
+For delegated implementation after a direction is chosen, use: **Astra plan → Luna map/research in parallel when useful → Sol build and focused tests → Astra integrate and verify → Astra xhigh review only when needed**. Do not spawn every role; run only bounded work that improves the result. Serialize dependent edits. The coordinator owns architecture, integration, and the final result.
 
 Run the Astra design gate before implementation when choices differ materially in module boundaries, data ownership, public APIs, permissions, schema or migration risk, concurrency, operational recovery, or long-term maintenance. Give Astra the mapped evidence and 2–3 feasible options, not an unbounded request to redesign the system. Require a concise decision record: recommendation, rejected alternatives, trade-offs, non-goals, and acceptance criteria. The coordinator accepts, narrows, or rejects that recommendation.
 

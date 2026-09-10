@@ -33,7 +33,7 @@ class SyncTests(unittest.TestCase):
             self.assertIn(f'model = "{model}"', config)
             parsed = __import__("tomllib").loads(config)
             self.assertEqual(parsed["models"]["new_thread"]["model"], model)
-            self.assertEqual(parsed["models"]["new_thread"]["model_reasoning_effort"], "low")
+            self.assertEqual(parsed["models"]["new_thread"]["model_reasoning_effort"], json.loads((self.source / "orchestration/models.json").read_text())["coordinator"]["reasoning"])
         if (self.source / "adhd").is_dir(): self.assertTrue((self.home / "skills/adhd-creative-flow/SKILL.md").exists())
         self.assertTrue((self.home / "model-routing/sync-state.json").exists())
 
@@ -83,12 +83,12 @@ class SyncTests(unittest.TestCase):
         finally:
             sync.model_catalog = original_catalog
         mapping = json.loads((self.home / "model-routing/models.json").read_text())
-        self.assertEqual(mapping['planner']['model'], 'gpt-5.6-terra')
+        self.assertEqual(mapping['planner']['model'], 'gpt-5.6-luna')
         self.assertEqual(mapping['coder']['model'], 'gpt-5.6-luna')
-        self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-terra')
-        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_planner.toml").read_text())
+        self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-luna')
+        self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_planner.toml").read_text())
         self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_coder.toml").read_text())
-        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_specialist.toml").read_text())
+        self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_specialist.toml").read_text())
 
     def test_schedule_failure_is_reported(self):
         original_catalog, original_schedule = sync.model_catalog, sync.install_schedule

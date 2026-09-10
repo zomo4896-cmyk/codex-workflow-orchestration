@@ -45,11 +45,11 @@ class SyncError(RuntimeError): pass
 
 
 ROLE_CANDIDATES = {
-    'coordinator': [('gpt-5.6-terra', 'low'), ('gpt-5.6-luna', 'medium')],
-    'routine': [('gpt-5.6-luna', 'low'), ('gpt-5.6-terra', 'low')],
-    'planner': [('gpt-6-astra', 'medium'), ('gpt-5.6-terra', 'high'), ('gpt-5.6-luna', 'high')],
-    'coder': [('gpt-5.3-codex-spark', 'medium'), ('gpt-5.6-luna', 'medium'), ('gpt-5.6-terra', 'medium')],
-    'specialist': [('gpt-6-astra', 'medium'), ('gpt-5.6-terra', 'high'), ('gpt-5.6-luna', 'high')],
+    'coordinator': [('gpt-6-astra', 'medium'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
+    'routine': [('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
+    'planner': [('gpt-6-astra', 'medium'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
+    'coder': [('gpt-5.6-sol', 'high'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
+    'specialist': [('gpt-6-astra', 'xhigh'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
 }
 
 

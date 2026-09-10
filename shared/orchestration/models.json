@@ -1,11 +1,11 @@
 {
   "coordinator": {
-    "model": "gpt-5.6-terra",
-    "reasoning": "low"
+    "model": "gpt-6-astra",
+    "reasoning": "medium"
   },
   "routine": {
     "model": "gpt-5.6-luna",
-    "reasoning": "low",
+    "reasoning": "max",
     "agent": "quota_routine"
   },
   "planner": {
@@ -14,13 +14,13 @@
     "agent": "quota_planner"
   },
   "coder": {
-    "model": "gpt-5.3-codex-spark",
-    "reasoning": "medium",
+    "model": "gpt-5.6-sol",
+    "reasoning": "high",
     "agent": "quota_coder"
   },
   "specialist": {
     "model": "gpt-6-astra",
-    "reasoning": "medium",
+    "reasoning": "xhigh",
     "agent": "quota_specialist"
   }
 }
