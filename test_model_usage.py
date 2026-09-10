@@ -14,7 +14,7 @@ class ModelUsageTests(unittest.TestCase):
                 {"type": "turn_context", "payload": {"model": "luna"}},
                 {"type": "token_usage_record", "payload": {"usage": {"total_tokens": 12, "reasoning_output_tokens": 3}}},
                 {"type": "turn_context", "payload": {"model": "astra"}},
-                {"type": "token_usage_record", "payload": {"usage": {"total_tokens": 8, "reasoning_output_tokens": 4}}},
+                {"type": "token_usage_record", "payload": {"usage": {"total_tokens": 20, "reasoning_output_tokens": 4}}},
             ]))
             self.assertEqual(summarize(Path(tmp), 10), {"luna": (1, 12, 3), "astra": (1, 8, 4)})
 

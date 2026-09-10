@@ -10,6 +10,7 @@ from pathlib import Path
 
 def records(path: Path):
     model = "unknown"
+    last_total = 0
     try:
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             item = json.loads(line)
@@ -18,7 +19,10 @@ def records(path: Path):
                 model = payload.get("model") or model
             usage = payload.get("usage") if item.get("type") == "token_usage_record" else None
             if isinstance(usage, dict):
-                yield model, int(usage.get("total_tokens") or 0), int(usage.get("reasoning_output_tokens") or 0)
+                total = int(usage.get("total_tokens") or 0)
+                delta = max(total - last_total, 0)
+                last_total = max(last_total, total)
+                yield model, delta, int(usage.get("reasoning_output_tokens") or 0)
     except (OSError, json.JSONDecodeError):
         return
 
