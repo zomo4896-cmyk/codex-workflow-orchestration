@@ -41,7 +41,9 @@ Automatic sync checks Git hourly and at login/user-service startup without consu
 
 Restart Codex to load new defaults. Existing sessions may retain their selected model/instructions. Explicit user/project settings and higher-priority instructions can override global defaults.
 
-The installer reads the authenticated local Codex model catalog before applying orchestration. Spark is used for the coder only when available; otherwise it falls back to Luna, then Terra. Astra is used for the architecture/review specialist only when available; otherwise it falls back to Terra, then Luna. The installed `model-routing/models.json` records each workstation's resolved mapping, so a plan upgrade or downgrade takes effect on its next sync.
+The installer reads the authenticated local Codex model catalog before applying orchestration. Spark is used for the coder only when available; otherwise it falls back to Luna, then Terra. Astra is used for the planning and architecture/review roles only when available; otherwise they fall back to Terra, then Luna. The installed `model-routing/models.json` records each workstation's resolved mapping, so a plan upgrade or downgrade takes effect on its next sync.
+
+Deep-dive and brainstorming requests use a discovery lane: frame the decision, gather evidence, compare up to three approaches, have the planning lead assign suitable workload, then produce a plan before implementation starts.
 
 The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the resolved coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
 

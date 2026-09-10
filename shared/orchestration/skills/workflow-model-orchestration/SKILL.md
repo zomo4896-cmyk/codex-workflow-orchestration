@@ -14,6 +14,7 @@ Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reas
 
 - Coordinator: own scope, integration, communication, and verification. Explicit user model choices prevail. Changing saved defaults does not change the running model.
 - Routine role: narrow independent extraction, inventories, and repeatable work.
+- Planner role: lead consequential discovery, option comparison, workload allocation, and the executable plan; use the strongest eligible planning route only when the decision warrants it.
 - Coder role: bounded code implementation or exploration, only when its model and required tools/modalities are available; otherwise use the routine role for narrow work or coordinator for broader work.
 - Specialist role: a consequential ambiguous decision or evidenced blocker. Pass the specific question and evidence; do not routinely review successful work with this role.
 
@@ -44,6 +45,7 @@ Identify the actual workflow and its dependencies before assigning models. These
 | Operations and debugging | Routine reads of relevant logs/config; coder applies a diagnosed repair | Reproduce, distinguish access/service failures, validate live behavior | Cross-system uncertainty unresolved by targeted investigation |
 | Research and documents | Routine extraction from relevant sources; independent source checks where useful | Judge source quality, synthesize, verify claims | Conflicting evidence requiring deeper reasoning |
 | Creative or media work | Routine asset inventory; bounded implementation with the appropriate craft tools | Direct and inspect the actual artifact; use domain skills | A specific difficult technical/design decision |
+| Deep dive, brainstorming, or a new approach | Routine evidence and precedent scan; up to three distinct approaches | Frame the decision, compare options, recommend a direction, and turn the chosen direction into a plan | Consequential ambiguity after evidence is gathered |
 
 The ADHD skill is optional and controls communication/creative focus only; this skill works without it. Do not impose a creative ideation process on coding, or model routing on an ADHD-only installation. Required specialist skill prerequisites and tool availability still apply.
 
@@ -53,8 +55,12 @@ For substantial repository work, use stages rather than a generic pool of agents
 
 | Stage | Role | Default route | Owns |
 |---|---|---|---|
+| Frame | coordinator | coordinator | The decision question, constraints, success criteria, and what is out of scope. |
 | Map | explorer | routine / Luna | Relevant files, execution path, constraints, and existing tests. Read-only. |
+| Explore | researcher | routine / Luna | Evidence, precedents, and up to three materially different feasible approaches. Read-only. |
+| Evaluate | planning lead | planner / Astra | Trade-offs, assumptions, workload allocation, and a recommended direction. Read-only. |
 | Decide | architect | specialist / Astra | Compare short-listed architecture choices before a consequential implementation begins. Read-only. |
+| Plan | planning lead | planner / Astra | Ordered work, dependencies, ownership, suitable role assignments, and acceptance checks. Read-only. |
 | Build | worker | coder / Spark | One bounded implementation surface with explicit file ownership. |
 | Prove | tester | routine / Luna | Reproduction and the smallest meaningful validation. No production-code edits. |
 | Verify facts | researcher | routine / Luna | Version-specific or external facts from primary sources. Read-only. |
@@ -64,7 +70,15 @@ Use the actual available agent type that matches the route. Role names describe 
 
 Delegate when a task spans multiple modules, needs repository mapping, has independent workstreams, crosses a runtime boundary, or needs verified external facts. Keep a localized and well-understood change with the coordinator. Do not delegate merely to satisfy a process rule.
 
-For delegated implementation, use: **map → Astra design gate when warranted → coordinator decides → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
+### Discovery before planning
+
+When the user asks to **deeper dive**, **brainstorm**, **explore new ideas**, **find a new way**, **rethink**, or **compare approaches**, do not jump to implementation. Use: **frame → map/evidence → explore alternatives → evaluate → Astra design gate when warranted → coordinator recommendation → plan**.
+
+Frame the decision in one sentence, identify constraints and success criteria, then generate no more than three meaningfully distinct approaches. Compare each against evidence, risks, reversibility, effort, and fit with existing work. Return a recommended direction, the viable alternatives and why they were not selected, remaining unknowns, and the next reversible action. Do not start a worker or mutate project files until the user chooses a direction or has explicitly asked to proceed with the recommendation.
+
+Use the planner for consequential discovery and planning after alternatives and evidence are short-listed. It assigns workload by task shape: routine for bounded evidence or proof, coder for settled isolated implementation, coordinator for integration and dependent work, and specialist only for a material unresolved decision. For a small or well-understood task, the coordinator plans directly. Astra is a decision synthesizer and planning lead when eligible, not the default brainstormer; routine evidence scans keep ordinary ideation fast and quota-aware.
+
+For delegated implementation after a direction is chosen, use: **map → Astra design gate when warranted → coordinator decides → plan → build → prove → risk-gated review → final verification**. Run independent mapping or research together; serialize dependent edits. The coordinator owns architecture, integration, and the final result.
 
 Run the Astra design gate before implementation when choices differ materially in module boundaries, data ownership, public APIs, permissions, schema or migration risk, concurrency, operational recovery, or long-term maintenance. Give Astra the mapped evidence and 2–3 feasible options, not an unbounded request to redesign the system. Require a concise decision record: recommendation, rejected alternatives, trade-offs, non-goals, and acceptance criteria. The coordinator accepts, narrows, or rejects that recommendation.
 

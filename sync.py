@@ -34,7 +34,7 @@ COMPONENT = {
     "orchestration": {
         "blocks": ("global-model-orchestration",),
         "resources": (
-            "models.json", "REVIEW.md", "agents/quota_routine.toml", "agents/quota_coder.toml", "agents/quota_specialist.toml",
+            "models.json", "REVIEW.md", "agents/quota_routine.toml", "agents/quota_planner.toml", "agents/quota_coder.toml", "agents/quota_specialist.toml",
             "skills/workflow-model-orchestration/SKILL.md", "skills/workflow-model-orchestration/agents/openai.yaml",
         ),
     },
@@ -47,6 +47,7 @@ class SyncError(RuntimeError): pass
 ROLE_CANDIDATES = {
     'coordinator': [('gpt-5.6-terra', 'low'), ('gpt-5.6-luna', 'medium')],
     'routine': [('gpt-5.6-luna', 'low'), ('gpt-5.6-terra', 'low')],
+    'planner': [('gpt-6-astra', 'medium'), ('gpt-5.6-terra', 'high'), ('gpt-5.6-luna', 'high')],
     'coder': [('gpt-5.3-codex-spark', 'medium'), ('gpt-5.6-luna', 'medium'), ('gpt-5.6-terra', 'medium')],
     'specialist': [('gpt-6-astra', 'medium'), ('gpt-5.6-terra', 'high'), ('gpt-5.6-luna', 'high')],
 }
@@ -294,8 +295,8 @@ def plan(args: argparse.Namespace) -> tuple[Path, dict[Path, bytes], dict]:
     wanted = None
     if "orchestration" in selected:
         mapping = resolve_mapping(json.loads((SHARED / "orchestration" / "models.json").read_text()))
-        if not all(k in mapping for k in ("coordinator", "routine", "coder", "specialist")): raise SyncError("invalid models.json")
-        for role in ("coordinator", "routine", "coder", "specialist"):
+        if not all(k in mapping for k in ("coordinator", "routine", "planner", "coder", "specialist")): raise SyncError("invalid models.json")
+        for role in ("coordinator", "routine", "planner", "coder", "specialist"):
             entry = mapping[role]
             if not isinstance(entry, dict) or not all(isinstance(entry.get(k), str) and entry[k] for k in ("model", "reasoning")):
                 raise SyncError(f"invalid {role} model mapping")

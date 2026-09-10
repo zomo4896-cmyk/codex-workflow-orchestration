@@ -8,6 +8,11 @@
     "reasoning": "low",
     "agent": "quota_routine"
   },
+  "planner": {
+    "model": "gpt-6-astra",
+    "reasoning": "medium",
+    "agent": "quota_planner"
+  },
   "coder": {
     "model": "gpt-5.3-codex-spark",
     "reasoning": "medium",

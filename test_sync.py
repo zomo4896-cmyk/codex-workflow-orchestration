@@ -83,8 +83,10 @@ class SyncTests(unittest.TestCase):
         finally:
             sync.model_catalog = original_catalog
         mapping = json.loads((self.home / "model-routing/models.json").read_text())
+        self.assertEqual(mapping['planner']['model'], 'gpt-5.6-terra')
         self.assertEqual(mapping['coder']['model'], 'gpt-5.6-luna')
         self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-terra')
+        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_planner.toml").read_text())
         self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_coder.toml").read_text())
         self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_specialist.toml").read_text())
 
