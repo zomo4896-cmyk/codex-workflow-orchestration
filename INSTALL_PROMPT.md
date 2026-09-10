@@ -1,9 +1,9 @@
 # Paste into Codex
 
 ```text
-Install workflow-aware model orchestration from https://github.com/zomo4896-cmyk/codex-workflow-orchestration on this workstation.
+Install or update workflow-aware model orchestration from https://github.com/zomo4896-cmyk/codex-workflow-orchestration on this computer.
 
-Read and follow the repository AGENTS.md. Use the public repository's initial adoption command; it must install the orchestration package and enable its automatic update schedule. Detect this host's actually available Codex models and use the installer fallbacks when Spark or Astra is unavailable. Preserve existing credentials, MCP servers, plugins, projects, and other machine-specific settings. Install only orchestration, not ADHD skills. Validate the installed mapping and scheduler, then state the active coordinator, planner, coder, and specialist models.
+Read the README entry flow and follow AGENTS.md. Detect Windows, Linux, or macOS and locate any existing installation before choosing initial adoption or an update. Reuse its checkout and preserve local customizations; resolve conflicts without force-overwriting. Enable automatic Git updates where supported. On macOS use the documented --no-schedule adoption route and manual updates because the scheduler does not support macOS. Detect this host's actually available Codex models and verify the resolved mapping. Preserve existing credentials, MCP servers, plugins, projects, and other machine-specific settings. Install only orchestration, not ADHD skills. Validate the installed files, mapping, and supported scheduler, then state the configured coordinator, planner, routine, coder, and specialist models and any restart requirement. Do not claim the current session changed model.
 ```
 
 The user must paste this into their own Codex session. A repository URL cannot make changes on another computer without that user's local authorization.

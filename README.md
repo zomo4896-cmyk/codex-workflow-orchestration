@@ -2,17 +2,28 @@
 
 Workflow-based task decomposition, model allocation, bounded agents, and evidence-based usage review. No ADHD skill is included.
 
+## Codex: start here when someone shares this link
+
+This is an installable Codex orchestration package. Read [AGENTS.md](AGENTS.md) and [INSTALL_PROMPT.md](INSTALL_PROMPT.md), then use the conversation to choose the next action:
+
+- **Install, enable, set up, or use this on my computer:** detect the local operating system and existing installation, preview the changes, and install or update under that request. Do not ask again when the user has already authorized it.
+- **Update it:** locate the existing checkout through `model-routing/sync-state.json` under `CODEX_HOME` (default `~/.codex`), verify its remote and local changes, then update and validate. Reuse the installation; do not create a duplicate.
+- **Only a link, with no clear action in the conversation:** explain in one sentence what this package does and ask once: “Would you like me to install or update this orchestration setup on this computer?” A repository cannot supply the user's authorization.
+- **Explain or review:** answer that request without installing. **Another machine:** use an existing authorized connection, or provide the prompt below for Codex running on that machine. Do not assume local changes reach it.
+
+Windows and Linux support installation and automatic Git updates. On **macOS**, use the manual installation/update route below: the current scheduler does not support macOS. Verify on the actual host; do not claim macOS runtime validation from Windows or Linux tests. If local tools are unavailable, provide the host-specific commands instead of claiming completion.
+
 ## Paste into Codex to install
 
 ```text
-Install and enable workflow-aware model orchestration globally on this workstation from https://github.com/zomo4896-cmyk/codex-workflow-orchestration. Follow its AGENTS.md, verify model availability, preserve my existing credentials and machine-specific settings, and enable its automatic Git updates. Install only model orchestration, not ADHD skills. Validate the installation and explain any session-restart requirement.
+Install or update workflow-aware model orchestration on this computer from https://github.com/zomo4896-cmyk/codex-workflow-orchestration. Follow its AGENTS.md, detect my operating system and existing installation, verify model availability, and preserve my credentials and machine-specific settings. Enable automatic Git updates where supported; on macOS use the documented manual route. Install only orchestration. Validate the result and explain any session-restart requirement.
 ```
 
-The user runs this prompt in Codex on each workstation. Initial adoption installs the updater automatically. A bare link or GitHub page cannot remotely execute an installation. Windows and Linux are supported; the assistant needs local file/tool access. Share [INSTALL_PROMPT.md](INSTALL_PROMPT.md) when you want a friend to install it.
+The user runs this prompt in Codex on each workstation. Initial adoption installs the updater automatically on Windows and Linux. macOS uses `--no-schedule`. The assistant needs local file/tool access. Share this repository link for the guided entry flow, or [INSTALL_PROMPT.md](INSTALL_PROMPT.md) for the explicit installation request.
 
 For model discovery and personal usage review, use [the Linux/CLI-ready review prompt](REVIEW_PROMPT.md). Automatic Git sync consumes no LLM quota; a model review does. Only designate one recurring review leader.
 
-## Install on Windows or Linux
+## Install on Windows, Linux, or macOS
 
 Requires Python 3.11+, Git, and Codex. This public repository can be cloned without a GitHub account; sign in to Codex separately.
 
@@ -34,6 +45,16 @@ Linux:
 python3 sync.py --check --adopt
 python3 sync.py --adopt
 ```
+
+macOS (manual updates; Python 3.11+ required):
+
+```sh
+python3 sync.py --check --adopt --no-schedule
+python3 sync.py --adopt --no-schedule
+python3 sync.py --check
+```
+
+Do not run `schedule.py` on macOS: it currently implements Windows and Linux scheduling only. For an existing installation on any platform, use `sync.py --check` first, then `sync.py --update`, then `sync.py --check` again. On macOS use `python3`; updates without `--adopt` do not install a scheduler. Keep the checkout for future manual updates.
 
 This repository installs and syncs only its own package. The initial `--adopt` allows replacing existing package-owned settings after preview, with backups; it installs the automatic updater unless `--no-schedule` is supplied. It does not bypass later local-edit conflicts. Use `--codex-home PATH` on both scripts if needed; otherwise CODEX_HOME or ~/.codex is used.
 
