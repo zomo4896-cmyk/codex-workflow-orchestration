@@ -73,6 +73,12 @@ Use the actual available agent type that matches the route. Role names describe 
 
 Delegate when a task spans multiple modules, needs repository mapping, has independent workstreams, crosses a runtime boundary, or needs verified external facts. Keep a localized and well-understood change with the coordinator. Do not delegate merely to satisfy a process rule.
 
+### Draw a small task graph
+
+Before delegating substantial work, list the bounded nodes, required evidence, and dependency edges. Fan out only nodes with no dependency between them, such as independent repository maps or external fact checks. Gate planning, implementation, integration, and review on the results they need. Keep the graph small: the existing two-worker cap remains the limit.
+
+Each completed node returns a concise evidence summary that becomes the next node's input. The coordinator freezes accepted facts, resolves conflicts, and decides whether a failed verification needs a narrow retry, a revised plan, or no further work. Do not force exploratory work into a graph before the question is clear; do not parallelize a real dependency chain.
+
 ### Discovery before planning
 
 When the user asks to **deeper dive**, **brainstorm**, **explore new ideas**, **find a new way**, **rethink**, or **compare approaches**, do not jump to implementation. Use: **frame → map/evidence → explore alternatives → evaluate → Astra design gate when warranted → coordinator recommendation → plan**.
