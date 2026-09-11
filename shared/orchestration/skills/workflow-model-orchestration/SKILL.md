@@ -24,7 +24,7 @@ During an authorized model-discovery review, read `<CODEX_HOME>/model-routing/RE
 
 Use named roles when supported; otherwise explicitly set the available spawn tool's model and compatible reasoning effort. Use a minimal-context fork or no history with a self-contained brief, rather than copying the full conversation. Never silently fall back to an expensive model; report an unavailable route briefly and continue with the coordinator when feasible.
 
-Delegate only when a bounded independent subtask can run alongside useful coordinator work. Prefer one worker, at most two concurrent workers and one specialist worker. Workers do not recursively delegate. Assign disjoint file ownership, relevant sources, constraints, dependencies, and completion checks. Run dependent edits sequentially. Do not duplicate a worker's investigation; integrate its evidence and perform the necessary combined verification.
+Delegate only when a bounded independent subtask can run alongside useful coordinator work. Prefer one worker; at most two subagents may run concurrently, including any specialist. Workers do not recursively delegate. Assign disjoint file ownership, relevant sources, constraints, dependencies, and completion checks. Run dependent edits sequentially. Do not duplicate a worker's investigation; integrate its evidence and perform the necessary combined verification.
 
 Escalate based on unresolved uncertainty after targeted investigation, not simply a failed command. Permissions, missing credentials, unavailable services, and rate limits are operational blockers, not reasons to ask a stronger model. Avoid repeated unchanged retries or model cycling. Do not redeem reset credits automatically.
 
@@ -79,13 +79,29 @@ Before delegating substantial work, list the bounded nodes, required evidence, a
 
 Each completed node returns a concise evidence summary that becomes the next node's input. The coordinator freezes accepted facts, resolves conflicts, and decides whether a failed verification needs a narrow retry, a revised plan, or no further work. Do not force exploratory work into a graph before the question is clear; do not parallelize a real dependency chain.
 
+### Save progress and resume safely
+
+For substantial delegated work or work likely to span interruptions, the coordinator maintains `<CODEX_HOME>/model-routing/task-progress/<task-id>.md`. Use the actual root task ID when available, otherwise generate one unique ID and retain it throughout the task. Report this checkpoint path once so the task can be explicitly resumed. Keep it outside project repositories and public Git sync. If an existing task-state service already owns progress, use that record instead; do not create a competing source of truth. Simple tasks need no checkpoint.
+
+Record the goal, current phase, accepted direction (or undecided), fixed acceptance criteria, and a compact table: `node | dependencies | owner/agent ID | status | attempts | evidence/artifact reference`. Status is pending, running, verified, blocked, or superseded. Only the coordinator writes this record, after planning and each meaningful result, using an atomic replacement. Keep summaries and artifact references, not raw logs, credentials, or full conversations. Record the next ready action and any unresolved external effect before a handoff; never commit the checkpoint.
+
+On resume, read the matching checkpoint before spawning work. Reconcile running agent IDs and the current files/revision or source freshness. Reuse verified results only while their inputs and evidence remain valid; mark affected dependent nodes pending when inputs change. A saved running status does not prove that an agent is still active or that its action completed. Do not restart completed research or launch a duplicate worker merely because the conversation was interrupted. This is instruction-driven persistence, not an automatic background workflow engine.
+
+### Bound corrections and protect verification
+
+For an isolated failed node, allow at most one targeted retry after examining the failure and changing the approach. If it fails again, return to the coordinator to narrow the task, revise the plan, or report a blocker. Keep the attempt history across resumes; rewording the same task does not reset its retry count. Permissions, outages, and unavailable credentials need an operational resolution. Reconcile uncertain deploys, messages, or other external effects before any retry.
+
+For an independent review, spawn a separate reviewer without inherited conversation history, containing requirements, acceptance criteria, the actual artifact or diff, and reproducible test evidence. A separate instance of the same model is acceptable. Omit the worker's persuasive explanation and full conversation; require the reviewer to inspect evidence and identify unsupported conclusions. Existing risk-based review triggers still apply. The coordinator must not weaken acceptance criteria, remove failing checks, or relabel failures to obtain a pass. Record legitimate changes in user intent explicitly and revalidate affected nodes. Parallel writers need disjoint ownership or isolated worktrees with one integration owner.
+
 ### Discovery before planning
 
 When the user asks to **deeper dive**, **brainstorm**, **explore new ideas**, **find a new way**, **rethink**, or **compare approaches**, do not jump to implementation. Use: **frame → map/evidence → explore alternatives → evaluate → Astra design gate when warranted → coordinator recommendation → plan**.
 
-Frame the decision in one sentence, identify constraints and success criteria, then generate no more than three meaningfully distinct approaches. Compare each against evidence, risks, reversibility, effort, and fit with existing work. Return a recommended direction, the viable alternatives and why they were not selected, remaining unknowns, and the next reversible action. Do not start a worker or mutate project files until the user chooses a direction or has explicitly asked to proceed with the recommendation.
+Frame the decision in one sentence, identify constraints and success criteria, then generate no more than three meaningfully distinct approaches. Compare each against evidence, risks, reversibility, effort, and fit with existing work. Return a recommended direction, the viable alternatives and why they were not selected, remaining unknowns, and the next reversible action. The coordinator or bounded read-only researchers may gather evidence before a direction is chosen; start the checkpoint during framing when its scope warrants one, with direction marked undecided. Do not start an implementation worker or mutate project files until the user chooses a direction or has explicitly asked to proceed with the recommendation.
 
 Use the planner for consequential discovery and planning after alternatives and evidence are short-listed. It assigns workload by task shape: routine for bounded evidence or proof, coder for settled isolated implementation, coordinator for integration and dependent work, and specialist only for a material unresolved decision. For a small or well-understood task, the coordinator plans directly. Astra is a decision synthesizer and planning lead when eligible, not the default brainstormer; routine evidence scans keep ordinary ideation fast and quota-aware.
+
+When the root already uses the planning model, it leads planning directly. Spawn a separate planner only for a distinct planning question that adds value; do not repeat the root's planning in another Astra context.
 
 For delegated implementation after a direction is chosen, use: **Astra plan → Luna map/research in parallel when useful → Sol build and focused tests → Astra integrate and verify → Astra xhigh review only when needed**. Do not spawn every role; run only bounded work that improves the result. Serialize dependent edits. The coordinator owns architecture, integration, and the final result.
 

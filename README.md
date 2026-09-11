@@ -66,6 +66,8 @@ The default topology is Astra medium for orchestration and integration, Luna max
 
 Deep-dive and brainstorming requests use a discovery lane: frame the decision, gather evidence, compare up to three approaches, have the planning lead assign suitable workload, then produce a plan before implementation starts.
 
+Substantial delegated tasks keep a local checkpoint under `CODEX_HOME/model-routing/task-progress/` with dependencies, owners, statuses, attempts, and evidence. The coordinator reconciles that checkpoint on resume, retries an isolated failure once before replanning, and gives independent reviewers fresh evidence context. Checkpoints stay private and are not Git-synced. This is skill-driven behavior, not a background workflow engine; existing task-state services remain authoritative. At most two subagents run together, and an Astra root plans directly unless a separate planner adds value.
+
 The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the resolved coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
 
 ## Contents
