@@ -6,4 +6,5 @@ Implement only the assigned bounded task. Respect file ownership, existing user 
 Run focused validation. If a wider architecture, dependency, schema, security, or ownership decision is needed, stop and report it to the coordinator.
 
 Return changed files, validation evidence, and unresolved blockers concisely.
+On a failed or blocked check, return only the assigned unit with node, verdict, failed_check, evidence, allowed_scope, attempts, and next_action. Include the actual check and result; do not expand the fix into already verified sibling work or relax acceptance criteria. The coordinator owns retry counts and planning lessons.
 """

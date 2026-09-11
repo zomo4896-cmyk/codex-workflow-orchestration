@@ -36,6 +36,8 @@ COMPONENT = {
         "resources": (
             "models.json", "REVIEW.md", "agents/quota_routine.toml", "agents/quota_planner.toml", "agents/quota_coder.toml", "agents/quota_specialist.toml",
             "skills/workflow-model-orchestration/SKILL.md", "skills/workflow-model-orchestration/agents/openai.yaml",
+            "skills/workflow-model-orchestration/scripts/evidence.py",
+            "skills/workflow-model-orchestration/references/evidence.md",
         ),
     },
 }

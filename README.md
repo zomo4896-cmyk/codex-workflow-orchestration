@@ -68,6 +68,8 @@ Deep-dive and brainstorming requests use a discovery lane: frame the decision, g
 
 Substantial delegated tasks keep a local checkpoint under `CODEX_HOME/model-routing/task-progress/` with dependencies, owners, statuses, attempts, and evidence. The coordinator reconciles that checkpoint on resume, retries an isolated failure once before replanning, and gives independent reviewers fresh evidence context. Checkpoints stay private and are not Git-synced. This is skill-driven behavior, not a background workflow engine; existing task-state services remain authoritative. At most two subagents run together, and an Astra root plans directly unless a separate planner adds value.
 
+The installed skill includes a read-only `scripts/evidence.py` helper for expected file hashes, JSON/TOML syntax, exact Git change scope, and normalized local outcome records. Define these checks before delegation, then run the task's behavioral tests separately. Failed units return a scoped failure packet; confirmed lessons go into private `review.json` planning constraints and inform later decomposition. See [the evidence guide](shared/orchestration/skills/workflow-model-orchestration/references/evidence.md). The helper does not execute model-generated commands, change settings, or upload data.
+
 The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the resolved coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
 
 ## Contents
@@ -80,7 +82,7 @@ The installer preserves unrelated config, instruction blocks, and files. Credent
 
 ```sh
 python sync.py --update
-python -m unittest test_sync test_schedule test_model_usage
+python -m unittest test_sync test_schedule test_model_usage test_evidence
 python scripts/model_usage.py --latest 100
 ```
 
