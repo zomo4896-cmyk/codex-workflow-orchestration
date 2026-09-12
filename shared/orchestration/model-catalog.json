@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-12T05:15:33.605350+00:00",
+  "sources": [
+    "https://learn.chatgpt.com/docs/models"
+  ],
+  "models": [
+    {
+      "id": "gpt-6-astra",
+      "description": "Complex end-to-end work requiring sustained reasoning and judgment.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "description": "Complex, open-ended work requiring depth and polish.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    },
+    {
+      "id": "gpt-5.6-terra",
+      "description": "Everyday work with balanced capability.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    },
+    {
+      "id": "gpt-5.6-luna",
+      "description": "Clear, repeatable tasks such as extraction and structured summaries.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    },
+    {
+      "id": "gpt-5.3-codex-spark",
+      "description": "Text-only research preview for fast coding iteration; access varies.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    },
+    {
+      "id": "gpt-5.5",
+      "description": "Previous-generation flagship; retained for compatible existing workflows.",
+      "source": "https://learn.chatgpt.com/docs/models"
+    }
+  ],
+  "notice": "Officially documented Codex models. This is not an exhaustive runtime inventory or a promise of account access. Verify model availability and supported reasoning on the current host before dispatch. No API price is treated as Codex plan quota."
+}

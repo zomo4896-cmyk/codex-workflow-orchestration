@@ -72,6 +72,16 @@ The installed skill includes a read-only `scripts/evidence.py` helper for expect
 
 The installer sets both the normal coordinator default and Codex's managed `[models.new_thread]` default to the resolved coordinator model and reasoning effort. This makes a fresh local Codex thread start on the coordinator route unless it has an explicit model override.
 
+## Strategy selection and recall
+
+The orchestrator chooses direct work, bounded parallel work (a small swarm), or a dependency graph from the actual task. A failed check can trigger one targeted repair attempt before replanning. Read/write conflicts, missing inputs, unavailable roles, and the two-worker limit constrain parallelism. These are composable patterns, not competing modes to enable everywhere.
+
+The read-only `strategy.py` helper validates a coordinator-authored plan and proposes waves and model assignments. It does not launch agents or modify files. Model choices come from the current installed mapping, with access checked on each host. See the [strategy helper](shared/orchestration/skills/workflow-model-orchestration/scripts/strategy.py) for its CLI and the [orchestration skill](shared/orchestration/skills/workflow-model-orchestration/SKILL.md) for routing rules.
+
+An existing local second brain can supply compact, source-linked records of previous approaches, response patterns, acceptance, and verification. This package does not install a memory service or copy personal history. Recall avoids rereading full conversations when a relevant record is sufficient. Past performance informs routing only when scope, requirements, and evidence remain comparable; token savings and lower cost are not assumed.
+
+The [public model catalog](shared/orchestration/model-catalog.json) carries official sources and a verification date. It is a reference, not an account-access inventory. Followers get generic strategy/catalog updates through their normal hourly Git updater (manual updates on macOS); personal records remain local.
+
 ## Contents
 
 See [package details](shared/orchestration/README.md). The standalone skill source is under [skills](shared/orchestration/skills).
@@ -82,7 +92,7 @@ The installer preserves unrelated config, instruction blocks, and files. Credent
 
 ```sh
 python sync.py --update
-python -m unittest test_sync test_schedule test_model_usage test_evidence
+python -m unittest test_sync test_schedule test_model_usage test_evidence test_strategy
 python scripts/model_usage.py --latest 100
 ```
 
@@ -94,7 +104,7 @@ To stop updates: `Unregister-ScheduledTask -TaskName CodexSync-orchestration -Co
 
 New-model policy: during an authorized discovery review, each verified new general-purpose Codex model introduction targets **one higher model tier per eligible role**, preserving reasoning effort exactly. The starting ladder is Luna → Sol → Astra. Top-tier roles wait for a verified higher compatible model; unavailable or incompatible targets stay pending. The review records each release and role so repeated checks cannot promote it again. See [the promotion procedure](shared/orchestration/REVIEW.md#one-tier-promotion-on-a-new-model-introduction). Existing models establish the first baseline without an immediate promotion. This is instruction-driven review behavior: hourly Git updates distribute published mappings but do not detect releases or run model reviews.
 
-Only the designated workstation runs the weekly Codex discovery automation. Maintain shared/orchestration/models.json, validate candidates and policy changes, run tests and sync locally, then commit only explicit generic orchestration source changes to an explicitly authorized repository. Followers only run Git sync. Never publish raw prompts, code, personal usage records, credentials, or backups.
+Only the designated workstation runs the authorized Codex discovery automation. Daily lightweight source checks can keep the catalog fresh while candidate benchmarks remain capped across seven days. Maintain shared/orchestration/models.json, validate candidates and policy changes, run tests and sync locally, then commit only explicit generic orchestration source changes to an explicitly authorized repository. Followers only run Git sync. Never publish raw prompts, code, personal usage records, credentials, or backups.
 
 The local compact outcomes log informs the leader's review of verified completion, rework, and escalation. Collection is instruction-driven, not guaranteed telemetry, and the leader does not automatically see other workstation logs. This supports evidence-based adaptation, not a guarantee of continuous optimality or exact quota attribution. Account quota is shared across workstations using the same account.
 

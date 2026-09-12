@@ -12,6 +12,25 @@ For every prompt, identify the outcome, uncertainty, required tools, dependencie
 
 Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reasoning assignments. This is the canonical mapping; config.toml and agent TOML model fields are synchronized runtime copies. Do not infer model assignments from old conversation messages.
 
+## Recall, choose, and measure the execution strategy
+
+Before substantial work, use already available confirmed project context and compact records of comparable completed strategies. If a local second-brain integration is installed, consume its context and recall result; this package does not install one or require private memory. Reuse recorded decisions and response patterns only within their supported scope. A recalled plan is a starting point: check current files, requirements, model availability, and prior verification before reusing it. Do not reload full transcripts when a cited compact record answers the question.
+
+Choose the simplest structure that fits the actual dependencies:
+
+- Direct: one small or tightly coupled task; keep it with the coordinator.
+- Bounded swarm: independent tasks with clear deliverables and disjoint read/write scopes; run at most two subagents alongside useful coordinator work.
+- Task graph: dependent stages, with parallel branches only where their inputs and scopes permit it. Integrate and verify before releasing dependent work.
+- Repair loop: a failed, isolated verification may receive one targeted retry after the cause and approach change. A second failure returns to planning. Operational blocks and uncertain external effects require resolution or reconciliation, not repeated inference.
+
+These patterns compose; a task graph can contain bounded parallel branches and a repair loop. Shared writes or a read during another worker's write must be serialized. Do not spawn redundant workers to manufacture consensus or call a sequential task a swarm.
+
+Assign roles from the current mapping at decomposition time: routine for narrow evidence work, coder for settled implementation, planner for consequential unresolved design, specialist for material independent review. Keep a simple task with the current coordinator even if a cheaper worker exists; delegation overhead can dominate. Explicit model choices prevail. A model listed in the published catalog is not proof of current-host access; check supported tools and reasoning before dispatch. Never claim to switch the model of the already-running coordinator.
+
+For a nontrivial graph, `scripts/strategy.py --plan <local-plan.json> --models <CODEX_HOME>/model-routing/models.json` validates dependencies, read/write scope conflicts, available roles, and worker limits and returns a proposed schedule. It never dispatches or executes commands. `scripts/strategy.py --context --home <CODEX_HOME>` returns compact strategy guidance, mappings, and model-catalog freshness. Keep plan files local. Actual agent availability and the coordinator's judgment remain authoritative.
+
+Record the chosen strategy, actual model roster, verification evidence, corrections, and response pattern in the existing local task checkpoint or an installed local strategy-recall adapter. Keep planned and observed assignments distinct. Link completed outcomes to their exact session/turn/result identity, deduplicate workers, and preserve missing values. User acceptance, technical verification, elapsed time, total tokens, and billed cost are different signals. Prefer verified useful output per measured resource use; do not equate cached/reported tokens with billed cost or account allowance. Use comparable accepted-and-verified examples to inform the next choice; weak samples do not establish an optimal strategy or justify a new default.
+
 ## New-model promotion policy
 
 During an authorized model-discovery review, read `<CODEX_HOME>/model-routing/REVIEW.md` and apply its one-tier promotion procedure. A newly introduced, verified Codex model is the trigger to move each eligible role to the next more capable model tier while preserving its exact reasoning level. The current user-defined ladder is Luna → Sol → Astra; extend it only with verified capability evidence. Roles at the highest available tier stay there until a higher eligible tier exists. Use a release record to prevent repeated promotion from the same introduction. This is a discovery-review policy, not a per-prompt catalog check or an automatic action performed by Git sync. Existing model names below describe the starting topology; the current mapping takes precedence after promotion.

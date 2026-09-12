@@ -34,9 +34,10 @@ COMPONENT = {
     "orchestration": {
         "blocks": ("global-model-orchestration",),
         "resources": (
-            "models.json", "REVIEW.md", "agents/quota_routine.toml", "agents/quota_planner.toml", "agents/quota_coder.toml", "agents/quota_specialist.toml",
+            "models.json", "model-catalog.json", "REVIEW.md", "agents/quota_routine.toml", "agents/quota_planner.toml", "agents/quota_coder.toml", "agents/quota_specialist.toml",
             "skills/workflow-model-orchestration/SKILL.md", "skills/workflow-model-orchestration/agents/openai.yaml",
             "skills/workflow-model-orchestration/scripts/evidence.py",
+            "skills/workflow-model-orchestration/scripts/strategy.py",
             "skills/workflow-model-orchestration/references/evidence.md",
         ),
     },
@@ -257,7 +258,7 @@ def selected_components(args: argparse.Namespace, state: dict) -> tuple[str, ...
 
 
 def destination(home: Path, rel: str) -> Path:
-    return home / "model-routing" / rel if rel in ("models.json", "REVIEW.md") else home / rel
+    return home / "model-routing" / rel if rel in ("models.json", "model-catalog.json", "REVIEW.md") else home / rel
 
 
 @contextmanager
