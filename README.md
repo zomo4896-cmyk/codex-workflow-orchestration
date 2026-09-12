@@ -108,7 +108,7 @@ Only the designated workstation runs the authorized Codex discovery automation. 
 
 The local compact outcomes log informs the leader's review of verified completion, rework, and escalation. Collection is instruction-driven, not guaranteed telemetry, and the leader does not automatically see other workstation logs. This supports evidence-based adaptation, not a guarantee of continuous optimality or exact quota attribution. Account quota is shared across workstations using the same account.
 
-`scripts/model_usage.py` is a read-only local summary of recent rollout records by active model. Use it as evidence in the weekly review; it does not report plan quota precisely and never uploads session content.
+`scripts/model_usage.py` summarizes observed model usage without uploading session content. Its normal table keeps the recent-file limit; `--inventory` scans all available local rollout history, including ongoing turns, split by model, reasoning level, and user/worker/automation activity. Use `--cache <private-cache.json>` to reuse unchanged files. Per-response counters are counted once, duplicate snapshots are reconciled, and missing or uncertain legacy counters remain visible. Cached input is included in reported tokens; these totals are not billed cost or plan allowance. The optional cache contains numeric metadata and hashed identifiers, not conversation text, and must remain private.
 
 ## Public sharing and personal customization
 
