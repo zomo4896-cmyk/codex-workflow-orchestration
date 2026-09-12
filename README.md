@@ -76,6 +76,8 @@ The installer sets both the normal coordinator default and Codex's managed `[mod
 
 The orchestrator chooses direct work, bounded parallel work (a small swarm), or a dependency graph from the actual task. A failed check can trigger one targeted repair attempt before replanning. Read/write conflicts, missing inputs, unavailable roles, and the two-worker limit constrain parallelism. These are composable patterns, not competing modes to enable everywhere.
 
+When an existing local queue is available, deferred requests can retain their priority, dates, dependencies and authorization while other work finishes. Queue claims and active ownership remain authoritative; background execution is opt-in and does not expand permissions. This package supplies the orchestration guidance, not a hosted queue service.
+
 The read-only `strategy.py` helper validates a coordinator-authored plan and proposes waves and model assignments. It does not launch agents or modify files. Model choices come from the current installed mapping, with access checked on each host. See the [strategy helper](shared/orchestration/skills/workflow-model-orchestration/scripts/strategy.py) for its CLI and the [orchestration skill](shared/orchestration/skills/workflow-model-orchestration/SKILL.md) for routing rules.
 
 An existing local second brain can supply compact, source-linked records of previous approaches, response patterns, acceptance, and verification. This package does not install a memory service or copy personal history. Recall avoids rereading full conversations when a relevant record is sufficient. Past performance informs routing only when scope, requirements, and evidence remain comparable; token savings and lower cost are not assumed.

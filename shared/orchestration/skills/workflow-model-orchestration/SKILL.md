@@ -16,6 +16,8 @@ Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reas
 
 Before substantial work, use already available confirmed project context and compact records of comparable completed strategies. If a local second-brain integration is installed, consume its context and recall result; this package does not install one or require private memory. Reuse recorded decisions and response patterns only within their supported scope. A recalled plan is a starting point: check current files, requirements, model availability, and prior verification before reusing it. Do not reload full transcripts when a cited compact record answers the question.
 
+When a user defers work or supplies independent follow-up tasks, use an existing local queue when available instead of expanding the active task indefinitely. Preserve priority, earliest start, deadlines, prerequisites, scope and execution authorization. A ready recommendation is not a reservation: claim before execution, respect active ownership, and keep paused or uncertain work out of automatic retries. Background dispatch requires the user's authorization and a supported scheduler; this package does not create a queue or authorize new external effects.
+
 Choose the simplest structure that fits the actual dependencies:
 
 - Direct: one small or tightly coupled task; keep it with the coordinator.
