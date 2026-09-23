@@ -60,9 +60,9 @@ This repository installs and syncs only its own package. The initial `--adopt` a
 
 Automatic sync checks Git hourly and at login/user-service startup without consuming model quota. Windows uses `CodexSync-orchestration`. Linux uses `codex-sync-orchestration.timer` when a user systemd bus is available; otherwise the installer creates only its own crontab entries for boot and hourly updates. Keep this checkout at its installed path. Public updates are read-only and need no GitHub credentials. A private fork requires its own non-interactive Git authentication.
 
-Restart Codex to load new defaults. Existing sessions may retain their selected model/instructions. Explicit user/project settings and higher-priority instructions can override global defaults.
+Restart Codex to load new defaults. Existing tasks refresh the installed skill and mapping when resumed or before fresh delegation, but their saved coordinator selection may remain. For a running CLI, finish/checkpoint the current turn, exit, and resume the same task with `codex resume <SESSION_ID> --model <installed coordinator model> -c model_reasoning_effort='<installed reasoning>'`. Use the values in `model-routing/models.json`; do not edit session history. In the desktop app, select that model/effort when resuming the task. No installer can hot-swap an already-running model. Explicit user/project settings and higher-priority instructions can override global defaults.
 
-The default topology is Astra medium for orchestration and integration, Luna max for exploration and research, Sol high for bounded implementation and focused tests, and Astra xhigh only for independent high-risk review. The installer reads the authenticated local Codex model catalog and falls back to Luna or Terra when a preferred model is unavailable. The installed `model-routing/models.json` records each workstation's resolved mapping.
+The default topology is Astra medium for orchestration and integration, Luna medium for exploration and research, Sol high for bounded implementation and focused tests, and Astra xhigh only for independent high-risk review. The installer reads the authenticated local Codex model catalog and selects a compatible cloud fallback when a preferred model is unavailable (Sol generations, then Terra high before Luna medium for coding). The installed `model-routing/models.json` records each workstation's resolved mapping.
 
 Deep-dive and brainstorming requests use a discovery lane: frame the decision, gather evidence, compare up to three approaches, have the planning lead assign suitable workload, then produce a plan before implementation starts.
 
@@ -111,6 +111,10 @@ Only the designated workstation runs the authorized Codex discovery automation. 
 The local compact outcomes log informs the leader's review of verified completion, rework, and escalation. Collection is instruction-driven, not guaranteed telemetry, and the leader does not automatically see other workstation logs. This supports evidence-based adaptation, not a guarantee of continuous optimality or exact quota attribution. Account quota is shared across workstations using the same account.
 
 `scripts/model_usage.py` summarizes observed model usage without uploading session content. Its normal table keeps the recent-file limit; `--inventory` scans all available local rollout history, including ongoing turns, split by model, reasoning level, and user/worker/automation activity. Use `--cache <private-cache.json>` to reuse unchanged files. Per-response counters are counted once, duplicate snapshots are reconciled, and missing or uncertain legacy counters remain visible. Cached input is included in reported tokens; these totals are not billed cost or plan allowance. The optional cache contains numeric metadata and hashed identifiers, not conversation text, and must remain private.
+
+## Upstream reference
+
+Reviewed [donvito/codex-astra-luna-orchestrator](https://github.com/donvito/codex-astra-luna-orchestrator/tree/30b7d0bb7e9b3b9a7d27e78a11c468f95c4cf704) at `30b7d0b` on 2026-09-23. Its newer GPT-6 profile choices inform this package's preferred model generation. We retain Astra-led planning, Sol high implementation, Luna medium evidence, risk-triggered Astra xhigh review, and a two-worker cap. Its project-copy PowerShell installer changes do not apply to this package's guarded Python global updater. Installation resolves exact model/effort support independently on each machine; a public profile is not proof of account access.
 
 ## Public sharing and personal customization
 

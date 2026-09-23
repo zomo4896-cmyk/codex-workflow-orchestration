@@ -4,8 +4,8 @@
     "reasoning": "medium"
   },
   "routine": {
-    "model": "gpt-5.6-luna",
-    "reasoning": "max",
+    "model": "gpt-6-luna",
+    "reasoning": "medium",
     "agent": "quota_routine"
   },
   "planner": {
@@ -14,7 +14,7 @@
     "agent": "quota_planner"
   },
   "coder": {
-    "model": "gpt-5.6-sol",
+    "model": "gpt-6-sol",
     "reasoning": "high",
     "agent": "quota_coder"
   },

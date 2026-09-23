@@ -12,6 +12,14 @@ For every prompt, identify the outcome, uncertainty, required tools, dependencie
 
 Read `<CODEX_HOME>/model-routing/models.json` for current role-to-model and reasoning assignments. This is the canonical mapping; config.toml and agent TOML model fields are synchronized runtime copies. Do not infer model assignments from old conversation messages.
 
+## Cloud execution and session activation
+
+Use cloud models only. Do not invoke local inference, local model profiles, or a hybrid runner unless the user explicitly enables them. Local memory storage, deterministic tools, and existing queue/MCP connections remain available. Historical strategies and automatic reviews cannot override this constraint.
+
+The coordinator owns planning and acceptance. Prefer one implementation worker; at most two independent workers, no recursive delegation. If the preferred cloud coder is unavailable, prefer a compatible Sol generation, then Terra high; use Luna medium only for a suitably narrow task. Broader work stays with the coordinator or reports an access/quota blocker. Never weaken focused tests or cycle models after a failed check.
+
+Read this skill and the installed mapping at the start of each new or resumed task, including the next turn in an existing task when file tools are available. Refresh the task plan against current policy before new delegation; preserve accepted work and explicit user choices. This refresh changes decisions and future worker selection, not the already-running coordinator's model. For a CLI process that cached configuration, exit safely and resume the same task with the configured model/effort explicitly selected. Never rewrite session history or restart active work to simulate a model switch.
+
 ## Recall, choose, and measure the execution strategy
 
 Before substantial work, use already available confirmed project context and compact records of comparable completed strategies. If a local second-brain integration is installed, consume its context and recall result; this package does not install one or require private memory. Reuse recorded decisions and response patterns only within their supported scope. A recalled plan is a starting point: check current files, requirements, model availability, and prior verification before reusing it. Do not reload full transcripts when a cited compact record answers the question.
@@ -81,13 +89,13 @@ For substantial repository work, use stages rather than a generic pool of agents
 | Stage | Role | Default route | Owns |
 |---|---|---|---|
 | Frame | coordinator | coordinator | The decision question, constraints, success criteria, and what is out of scope. |
-| Map | explorer | routine / Luna max | Relevant files, execution path, constraints, and existing tests. Read-only. |
-| Explore | researcher | routine / Luna max | Evidence, precedents, and up to three materially different feasible approaches. Read-only. |
+| Map | explorer | routine / current mapping | Relevant files, execution path, constraints, and existing tests. Read-only. |
+| Explore | researcher | routine / current mapping | Evidence, precedents, and up to three materially different feasible approaches. Read-only. |
 | Evaluate | planning lead | planner / Astra | Trade-offs, assumptions, workload allocation, and a recommended direction. Read-only. |
 | Decide | architect | specialist / Astra | Compare short-listed architecture choices before a consequential implementation begins. Read-only. |
 | Plan | planning lead | planner / Astra | Ordered work, dependencies, ownership, suitable role assignments, and acceptance checks. Read-only. |
 | Build and test | worker | coder / Sol high | One bounded implementation surface and its focused tests. |
-| Verify facts | researcher | routine / Luna max | Version-specific or external facts from primary sources. Read-only. |
+| Verify facts | researcher | routine / current mapping | Version-specific or external facts from primary sources. Read-only. |
 | Review | reviewer | specialist / Astra xhigh | Independent material correctness, security, integrity, concurrency, or compatibility review. Read-only. |
 
 Use the actual available agent type that matches the route. Role names describe the contract; they do not require an agent if the task is too small to benefit from one.

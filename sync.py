@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -48,11 +49,11 @@ class SyncError(RuntimeError): pass
 
 
 ROLE_CANDIDATES = {
-    'coordinator': [('gpt-6-astra', 'medium'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
-    'routine': [('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
-    'planner': [('gpt-6-astra', 'medium'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
-    'coder': [('gpt-5.6-sol', 'high'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
-    'specialist': [('gpt-6-astra', 'xhigh'), ('gpt-5.6-luna', 'max'), ('gpt-5.6-terra', 'high')],
+    'coordinator': [('gpt-6-sol', 'medium'), ('gpt-5.6-sol', 'medium'), ('gpt-5.6-terra', 'medium'), ('gpt-6-luna', 'medium'), ('gpt-5.6-luna', 'medium')],
+    'routine': [('gpt-5.6-luna', 'medium'), ('gpt-6-luna', 'medium'), ('gpt-6-sol', 'medium'), ('gpt-5.6-terra', 'medium')],
+    'planner': [('gpt-6-sol', 'medium'), ('gpt-5.6-sol', 'medium'), ('gpt-5.6-terra', 'medium'), ('gpt-6-luna', 'medium'), ('gpt-5.6-luna', 'medium')],
+    'coder': [('gpt-5.6-sol', 'high'), ('gpt-5.6-terra', 'high'), ('gpt-6-luna', 'medium'), ('gpt-5.6-luna', 'medium')],
+    'specialist': [('gpt-6-sol', 'xhigh'), ('gpt-5.6-sol', 'xhigh'), ('gpt-5.6-terra', 'xhigh'), ('gpt-6-luna', 'xhigh'), ('gpt-5.6-luna', 'xhigh')],
 }
 
 
@@ -65,30 +66,41 @@ def atomic(path: Path, data: bytes) -> None:
     os.replace(temp, path)
 
 
-def model_catalog() -> set[str] | None:
+def model_catalog() -> dict[str, set[str]] | None:
     """Read only the authenticated local Codex catalog; unavailable is not an error."""
     try:
-        result = subprocess.run(['codex', 'debug', 'models'], text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=20, check=True)
+        executable = shutil.which('codex')
+        if not executable: return None
+        result = subprocess.run([executable, 'debug', 'models'], text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=20, check=True)
         catalog = json.loads(result.stdout or '')
     except (OSError, TypeError, subprocess.CalledProcessError, subprocess.TimeoutExpired, json.JSONDecodeError):
         return None
     models = catalog.get('models', []) if isinstance(catalog, dict) else catalog
     if not isinstance(models, list): return None
-    return {entry.get('slug') or entry.get('model') for entry in models if isinstance(entry, dict) and isinstance(entry.get('slug') or entry.get('model'), str)}
+    return {
+        slug: {level['effort'] for level in entry.get('supported_reasoning_levels', [])
+               if isinstance(level, dict) and isinstance(level.get('effort'), str)}
+        for entry in models if isinstance(entry, dict)
+        if isinstance(slug := entry.get('slug') or entry.get('model'), str)
+        and isinstance(entry.get('supported_reasoning_levels'), list)
+    }
 
 
 def resolve_mapping(mapping: dict) -> dict:
-    """Keep the published preference order, selecting only models this host exposes."""
+    """Keep reviewed choices when possible; select only supported model/effort pairs."""
     available = model_catalog()
-    if not available: return copy.deepcopy(mapping)
+    if available is None:
+        print('Codex model catalog unavailable; preserving reviewed mapping without runtime verification', file=sys.stderr)
+        return copy.deepcopy(mapping)
     resolved = copy.deepcopy(mapping)
     for role, candidates in ROLE_CANDIDATES.items():
         # The reviewed source mapping owns promotions and their reasoning levels.
-        if resolved[role]['model'] in available:
+        if resolved[role]['reasoning'] in available.get(resolved[role]['model'], set()):
             continue
-        selected = next((candidate for candidate in candidates if candidate[0] in available), None)
-        if selected:
-            resolved[role]['model'], resolved[role]['reasoning'] = selected
+        selected = next((candidate for candidate in candidates if candidate[1] in available.get(candidate[0], set())), None)
+        if not selected:
+            raise SyncError(f'no compatible available model and reasoning for {role}')
+        resolved[role]['model'], resolved[role]['reasoning'] = selected
     return resolved
 
 def no_symlink(root: Path, path: Path) -> None:

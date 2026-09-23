@@ -13,6 +13,8 @@ Canonical assignments: models.json in this directory. Global routing policy: ../
 5. Within the user-authorized review/apply scope, before an approved-by-evidence change, re-read target files and back up originals in a timestamped backups directory here. Stop if explicit user changes conflict with the proposal. Update models.json and only the corresponding runtime model/reasoning fields. Parse JSON and all changed TOML, then verify assignments match. On failure restore files changed by this review without overwriting concurrent user edits. Do not rewrite unrelated instructions or profiles. Record old/new assignments, sources, checks, and limitations in review.json.
 6. If a candidate later demonstrates a regression, restore the last verified assignment with the same guarded process. Do not claim newly saved defaults replace models in existing sessions. Keep reviews quiet while unchanged or non-actionable; notify only on a validated change, failed synchronization, material deprecation, or required user action. Keep reports concise. Reuse evidence so unchanged candidates are not retested every week.
 
+Cloud-only policy and explicit role choices take precedence over historical receipts or promotion rules. Do not restore local inference through model discovery, Git synchronization, or usage optimization. Verify exact reasoning compatibility, not just model names.
+
 ## One-tier promotion on a new model introduction
 
 This policy means model capability, not reasoning effort. Preserve every role's exact reasoning string. The user-defined starting order is `gpt-5.6-luna` → `gpt-5.6-sol` → `gpt-6-astra`; it is a routing preference, not an official universal benchmark ranking.

@@ -1,10 +1,13 @@
+import io
 import json
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
+from unittest.mock import patch
 
 import sync
 
@@ -14,7 +17,15 @@ class SyncTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(); self.home = Path(self.temp.name) / "codex"
         self.source = Path(self.temp.name) / "shared"; self.original_shared = sync.SHARED
         shutil.copytree(sync.SHARED, self.source); sync.SHARED = self.source
+        self.real_model_catalog = sync.model_catalog
+        self.available = {
+            model: {'low', 'medium', 'high', 'xhigh', 'max', 'ultra'} for model in (
+                'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.6-sol', 'gpt-5.6-terra', 'gpt-5.6-luna')
+        }
+        self.catalog_patch = patch.object(sync, 'model_catalog', return_value=self.available)
+        self.catalog_patch.start()
     def tearDown(self):
+        self.catalog_patch.stop()
         sync.SHARED = self.original_shared; self.temp.cleanup()
     def require(self, component):
         if not (self.source / component).is_dir(): self.skipTest(f"{component} package is not in this checkout")
@@ -67,7 +78,7 @@ class SyncTests(unittest.TestCase):
         original_catalog = sync.model_catalog
         try:
             data["coder"]["model"] = "gpt-5.6-terra"; source.write_text(json.dumps(data))
-            sync.model_catalog = lambda: {'gpt-5.6-terra'}
+            sync.model_catalog = lambda: original_catalog.return_value
             self.sync_home()
             self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_coder.toml").read_text())
         finally:
@@ -76,7 +87,6 @@ class SyncTests(unittest.TestCase):
 
     def test_published_promotion_survives_sync_and_preserves_reasoning(self):
         self.require("orchestration")
-        from unittest.mock import patch
         source = sync.SHARED / "orchestration/models.json"
         data = json.loads(source.read_text())
         data["routine"]["model"] = "gpt-5.6-sol"
@@ -85,7 +95,8 @@ class SyncTests(unittest.TestCase):
         data["coordinator"]["model"] = "test-future-model"
         source.write_text(json.dumps(data))
         with patch.object(sync, "model_catalog", return_value={
-            "gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra", "test-future-model"
+            model: {'low', 'medium', 'high', 'xhigh', 'max'} for model in (
+                "gpt-5.6-luna", "gpt-5.6-sol", "gpt-6-astra", "test-future-model")
         }):
             self.sync_home()
             self.sync_home()
@@ -101,18 +112,60 @@ class SyncTests(unittest.TestCase):
     def test_missing_spark_and_astra_use_available_fallbacks(self):
         self.require("orchestration")
         original_catalog = sync.model_catalog
-        sync.model_catalog = lambda: {'gpt-5.6-terra', 'gpt-5.6-luna'}
+        sync.model_catalog = lambda: {'gpt-5.6-terra': {'high', 'xhigh'}, 'gpt-5.6-luna': {'medium', 'xhigh'}}
         try:
             self.sync_home()
         finally:
             sync.model_catalog = original_catalog
         mapping = json.loads((self.home / "model-routing/models.json").read_text())
         self.assertEqual(mapping['planner']['model'], 'gpt-5.6-luna')
-        self.assertEqual(mapping['coder']['model'], 'gpt-5.6-luna')
-        self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-luna')
+        self.assertEqual(mapping['coder']['model'], 'gpt-5.6-terra')
+        self.assertEqual(mapping['specialist']['model'], 'gpt-5.6-terra')
         self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_planner.toml").read_text())
-        self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_coder.toml").read_text())
-        self.assertIn('model = "gpt-5.6-luna"', (self.home / "agents/quota_specialist.toml").read_text())
+        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_coder.toml").read_text())
+        self.assertIn('model = "gpt-5.6-terra"', (self.home / "agents/quota_specialist.toml").read_text())
+
+    def test_catalog_discovers_windows_wrapper_and_reasoning(self):
+        payload = {'models': [{'slug': 'gpt-6-sol', 'supported_reasoning_levels': [
+            {'effort': 'medium'}, {'effort': 'high'}]}]}
+        with patch.object(sync.shutil, 'which', return_value=r'C:\Codex\codex.cmd') as which:
+            with patch.object(sync.subprocess, 'run', return_value=type('Result', (), {'stdout': json.dumps(payload)})()) as run:
+                self.assertEqual(self.real_model_catalog(), {'gpt-6-sol': {'medium', 'high'}})
+        which.assert_called_once_with('codex')
+        self.assertEqual(run.call_args.args[0], [r'C:\Codex\codex.cmd', 'debug', 'models'])
+
+    def test_unsupported_effort_uses_compatible_fallback(self):
+        self.require('orchestration')
+        source = json.loads((self.source / 'orchestration/models.json').read_text())
+        source['coder']['model'], source['coder']['reasoning'] = 'gpt-6-sol', 'high'
+        with patch.object(sync, 'model_catalog', return_value={
+            **self.available,
+            'gpt-6-sol': {'medium'}, 'gpt-5.6-sol': {'medium'}, 'gpt-5.6-terra': {'high'},
+        }):
+            resolved = sync.resolve_mapping(source)
+        self.assertEqual((resolved['coder']['model'], resolved['coder']['reasoning']), ('gpt-5.6-terra', 'high'))
+
+    def test_new_generation_luna_is_fallback_for_all_roles(self):
+        source = json.loads((self.source / 'orchestration/models.json').read_text())
+        with patch.object(sync, 'model_catalog', return_value={'gpt-6-luna': {'medium', 'xhigh'}}):
+            resolved = sync.resolve_mapping(source)
+        for role in ('coordinator', 'routine', 'planner', 'coder'):
+            self.assertEqual((resolved[role]['model'], resolved[role]['reasoning']), ('gpt-6-luna', 'medium'))
+        self.assertEqual((resolved['specialist']['model'], resolved['specialist']['reasoning']), ('gpt-6-luna', 'xhigh'))
+
+    def test_no_compatible_model_fails_before_writes(self):
+        with patch.object(sync, 'model_catalog', return_value={'gpt-6-astra': {'low'}}):
+            with self.assertRaisesRegex(sync.SyncError, 'no compatible available model and reasoning for coordinator'):
+                self.sync_home()
+        self.assertFalse((self.home / 'config.toml').exists())
+        self.assertFalse((self.home / 'model-routing/sync-state.json').exists())
+
+    def test_unavailable_catalog_reports_unverified_mapping(self):
+        source = json.loads((self.source / 'orchestration/models.json').read_text())
+        stderr = io.StringIO()
+        with patch.object(sync, 'model_catalog', return_value=None), redirect_stderr(stderr):
+            self.assertEqual(sync.resolve_mapping(source), source)
+        self.assertIn('without runtime verification', stderr.getvalue())
 
     def test_schedule_failure_is_reported(self):
         original_catalog, original_schedule = sync.model_catalog, sync.install_schedule
@@ -251,7 +304,10 @@ class SyncTests(unittest.TestCase):
         source = sync.SHARED / "orchestration/models.json"; original = source.read_text(); data = json.loads(original)
         try:
             data["coder"]["model"] = "new-coder"; source.write_text(json.dumps(data))
-            self.sync_home("--component", "orchestration")
+            with patch.object(sync, 'model_catalog', return_value={
+                **self.available, 'new-coder': {data['coder']['reasoning']}
+            }):
+                self.sync_home("--component", "orchestration")
             self.assertEqual(adhd.read_text(), "mine")
             self.assertIn('model = "new-coder"', (self.home / "agents/quota_coder.toml").read_text())
         finally: source.write_text(original)
